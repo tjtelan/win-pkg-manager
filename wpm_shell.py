@@ -32,11 +32,10 @@ class shell:
         self.parser.add_argument('-v', '--verbose', action='store_true', help='Be verbose')
         self.parser.add_argument('-x', '--exclude', metavar='GLOB', nargs='+', help='Exclude packages matching the specified glob pattern')
 
-        #self.args = parser.parse_args()
-
-        def cmd(self, argv=None):
-            if len(argv) > 0:
-                self.args = self.parser.parse_args(argv)
-            else:
-                print('DEBUG: empty argv')
-        return
+    def cmd(self, argv=""):
+        if len(argv) < 1:
+            self.args = self.parser.parse_args('-h'.split())
+            return -1
+        else:
+            self.args = self.parser.parse_args(argv)
+            return 0
