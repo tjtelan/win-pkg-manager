@@ -8,5 +8,5 @@ from wpm_shell import shell
 
 x = shell('logfile')
 
-x.cmd(sys.argv[1:])
+x.cmd(sys.argv)
 

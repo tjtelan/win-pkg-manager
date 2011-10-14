@@ -33,9 +33,9 @@ class shell:
         self.parser.add_argument('-x', '--exclude', metavar='GLOB', nargs='+', help='Exclude packages matching the specified glob pattern')
 
     def cmd(self, argv=""):
-        if len(argv) < 1:
+        if len(argv) < 2:
             self.args = self.parser.parse_args('-h'.split())
             return -1
         else:
-            self.args = self.parser.parse_args(argv)
+            self.args = self.parser.parse_args(argv[1:])
             return 0
