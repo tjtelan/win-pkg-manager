@@ -12,10 +12,6 @@ class shell:
         # Simplified usage message
         self.parser = argparse.ArgumentParser(prog='winpkg', usage='%(prog)s [options] command ... [pkg_name]', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-        # Positional arguments
-        self.parser.add_argument('command', choices=['info', 'update', 'install', 'remove'], help='', action=cmdAction)
-        self.parser.add_argument('pkg_name', nargs='*', help='Package(s) to act on')
-
         # Optional flags
         self.parser.add_argument('-a', '--all', action='store_true', help='Do with all the installed packages')
         self.parser.add_argument('-A', '--afterinstall', metavar='CMD', nargs=1, help='Run the specified command after each installation')
@@ -32,6 +28,10 @@ class shell:
         self.parser.add_argument('-v', '--verbose', action='store_true', help='Be verbose')
         self.parser.add_argument('-x', '--exclude', metavar='GLOB', nargs='+', help='Exclude packages matching the specified glob pattern')
 
+        # Positional arguments
+        self.parser.add_argument('command', choices=['info', 'update', 'install', 'remove'], help='', action=cmdAction)
+        self.parser.add_argument('pkg_name', nargs='*', action=cmdProg, help='Package(s) to act on')
+
     # cmd
     # 
     # Takes in sys.argv, trims off sys.argv[0] and run command
@@ -41,9 +41,14 @@ class shell:
             return -1
         else:
             self.args = self.parser.parse_args(argv[1:])
-            print('argv: %s' % argv[1:])
+            #print('argv: %s' % argv[1:])
+            #print('all_switch: =', self.args.all)
             return 0
 
 class cmdAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        print('namespace: %r \nvalues: %r \noption_string %r' % (namespace, values, option_string))
+
+class cmdProg(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         print('namespace: %r \nvalues: %r \noption_string %r' % (namespace, values, option_string))
