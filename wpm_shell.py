@@ -13,7 +13,7 @@ class shell:
         self.parser = argparse.ArgumentParser(prog='winpkg', usage='%(prog)s [options] command ... [pkg_name]', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         # Positional arguments
-        self.parser.add_argument('command', choices=['info', 'update', 'install', 'remove'], help='')
+        self.parser.add_argument('command', choices=['info', 'update', 'install', 'remove'], help='', action=cmdAction)
         self.parser.add_argument('pkg_name', nargs='*', help='Package(s) to act on')
 
         # Optional flags
@@ -32,10 +32,18 @@ class shell:
         self.parser.add_argument('-v', '--verbose', action='store_true', help='Be verbose')
         self.parser.add_argument('-x', '--exclude', metavar='GLOB', nargs='+', help='Exclude packages matching the specified glob pattern')
 
+    # cmd
+    # 
+    # Takes in sys.argv, trims off sys.argv[0] and run command
     def cmd(self, argv=""):
         if len(argv) < 2:
             self.args = self.parser.parse_args('-h'.split())
             return -1
         else:
             self.args = self.parser.parse_args(argv[1:])
+            print('argv: %s' % argv[1:])
             return 0
+
+class cmdAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        print('namespace: %r \nvalues: %r \noption_string %r' % (namespace, values, option_string))
