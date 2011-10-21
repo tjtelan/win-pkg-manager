@@ -3,7 +3,9 @@
 import os, sys
 sys.path.append(os.curdir)
 
-#from wpm_db import db
+
+import sqlite3, logging
+from wpm_db import db
 from wpm_shell import shell
 
 x = shell('logfile')

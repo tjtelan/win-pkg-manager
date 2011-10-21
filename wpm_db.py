@@ -43,7 +43,7 @@ class db:
 			if self.cursor.fetchone() == None:
 				try:
 					self.cursor.execute(tableConstruct[ix])
-				except sqlite3.Error, e:
+				except sqlite3.Error as e:
 					logging.exception("Database error: " + str(e.args[0]))
 					raise
 				except:
@@ -85,7 +85,7 @@ class db:
 				data = self.cursor.fetchmany(num)
 				logging.info("Database: Fetched " + str(num) + " entries from query")
 				return data
-			except sqlite3.Error, e:
+			except sqlite3.Error as e:
 					logging.exception("Database error: " + str(e.args[0]))
 					raise
 			except TypeError:
@@ -126,7 +126,7 @@ class db:
 			self.cursor.execute(qField, (appName,))
 			logging.info("Database Query: Application: " + appName + " -- Table: " + tableName + " -- Fields: " + str(selectField))
 			return True
-		except sqlite3.Error, e:
+		except sqlite3.Error as e:
 			logging.exception("Database error: " + str(e.args[0]))
 			raise
 		except:
@@ -167,7 +167,7 @@ class db:
 				self.conn.commit()
 				logging.info("Database Insert: Table: " + tableName + " -- Fields: " + str(fields) + " -- Data: " + str(data))
 				return True
-			except sqlite3.Error, e:
+			except sqlite3.Error as e:
 				logging.exception("Database error: " + str(e.args[0]))
 				raise
 			except:
@@ -190,7 +190,7 @@ class db:
 				self.conn.commit()
 				logging.info("Database Insert: Table: " + tableName + " -- Application: " + appName + " -- Fields: " + fields + " -- Data: " + data)
 				return True
-			except sqlite3.Error, e:
+			except sqlite3.Error as e:
 				logging.exception("Database error: " + str(e.args[0]))
 				raise
 			except:
