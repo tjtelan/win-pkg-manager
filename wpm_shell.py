@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import os, argparse, logging
+from wpm_db import db
+#from wpm_app import app
 
 class shell:
     # __init__
@@ -60,35 +62,65 @@ class cmdProg(argparse.Action):
             namespace.recursive = True
             namespace.upward_recursive = True
 
-        # Check on the status of programs that depend on `program"
-        if namespace.upward_recursive:
-            print("Query for programs which have %s as a dependency\n" % program)
-            # append these programs to list progs
+        # TODO: Build program execution list that looks like:
+        #  [ prog1, prog1_depends, prog2, prog2_depends... ]
 
-        # Check on the status of dependencies of `program"
-        if namespace.recursive:
-            print("Query for dependencies of %s\n" % program)
-            # append these programs to list progs
+        for program in values:
+            # Check on the status of dependencies of `program"
+            if namespace.recursive:
+                test_depends = ["dep1", "dep2", "dep3"]
+                print("Query for dependencies of %s" % program)
+
+                # append these programs to list progs
+                for deps in test_depends:
+                    print("Adding %s as a dependency to %s" % (deps, program))
+                    progs.insert(progs.index(program)+1, deps)
+
+            # Check on the status of programs that depend on `program"
+            if namespace.upward_recursive:
+                test_updepends = ["Udep1", "Udep2", "Udep3"]
+                print("Query for programs which have %s as a dependency" % program)
+
+                # append these programs to list progs
+                for deps in test_updepends:
+                    print("Adding %s as a dependency to %s" % (deps, program))
+                    progs.insert(progs.index(program)+1, deps)
+
+        print("Order of execution: %s\n" % progs)
 
         for program in reversed(progs):
 
-            print("Performing %s on %s\n" % (namespace.command, program))
+            print("Performing %s on %s" % (namespace.command, program))
 
             #if namespace.verbose:
-            print("Query for %s in db\n" % program)
+            print("Query for %s in db" % program)
+
+            print("DB: Query for version info for %s" % program)
+            print("DB: Check if %s has been checked for \'out-of-date-ness\' recently" % program)
+            print("APP: Check for current version if needed\n")
 
             if (namespace.command == "info"):
-                print("")
+                print("SHELL: Print name, current installed version, and newest version (if out of date), otherwise say \'up to date\'")
+                print("(SHELL: May need to support wildcards? For uses like \'$ winpkg info *\' OR support input for 0 or more programs, with default all for 0)\n")
+                print("DB: Possibly need a way to return all installed programs if run with no specific program")
             elif (namespace.command == "update"):
-                print("")
+                print("APP: Go out and download installer")
+                print("APP: Run through update script (This will need fitting to each program)")
+                print("DB: Update version information for %s when complete\n" % program)
+                print("(APP: Probably need to have functionality to update all installed programs when shell run with no program)")
             elif (namespace.command == "install"):
-                print("")
+                print("(Install is assumed to be interactive in most cases, but could add functionality later to be batched)")
+                print("SHELL: Ask for details for the installer (Programs will have to be fitted to this package manager)")
+                print("DB: Create a new profile using those defaults")
+                print("APP: Fetch and install using info from the DB\n")
             elif (namespace.command == "remove"):
-                print("")
+                print("DB: Check for an uninstaller")
+                print("APP: Run uninstaller if DB says there is one")
+                print("APP: Run uninstall script, if you had to create one with the installer")
+                print("APP: Respond with error if %s cannot be uninstalled with this tool" % program)
+                print("DB: Remove profile from DB if successfullly removed\n")
             else:
-                print("Problem. Shouldn\'t ever make it here")
-
-
+                print("Problem. Shouldn\'t ever make it here\n")
 
 
 
