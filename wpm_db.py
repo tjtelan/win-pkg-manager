@@ -44,7 +44,7 @@ class db:
 			if self.cursor.fetchone() == None:
 				try:
 					self.cursor.execute(tableConstruct[ix])
-				except sqlite3.Error as e
+				except sqlite3.Error as e:
 					logging.exception("Database error: " + str(e.args[0]))
 					raise
 				except:
@@ -90,7 +90,7 @@ class db:
 				data = self.cursor.fetchmany(num)
 				logging.info("Database: Fetched " + str(num) + " entries from query")
 				return data
-			except sqlite3.Error as e
+			except sqlite3.Error as e:
 					logging.exception("Database error: " + str(e.args[0]))
 					raise
 			except TypeError:
@@ -140,7 +140,7 @@ class db:
 				
 			logging.info("Database Query: Application: " + str(appName) + " -- Table: " + tableName + " -- Fields: " + str(selectField))
 			return True
-		except sqlite3.Error as e
+		except sqlite3.Error as e:
 			logging.exception("Database error: " + str(e.args[0]))
 			raise
 		except:
@@ -183,7 +183,7 @@ class db:
 					self.conn.commit()
 				logging.info("Database Insert: Table: " + tableName + " -- Fields: " + str(fields) + " -- Data: " + str(data))
 				return True
-			except sqlite3.Error as e
+			except sqlite3.Error as e:
 				logging.exception("Database error: " + str(e.args[0]))
 				raise
 			except:
@@ -208,7 +208,7 @@ class db:
 					self.conn.commit()
 				logging.info("Database Insert: Table: " + tableName + " -- Application: " + data[idPos] + " -- Fields: " + str(fields) + " -- Data: " + str(qData))
 				return True
-			except sqlite3.Error as e
+			except sqlite3.Error as e:
 				logging.exception("Database error: " + str(e.args[0]))
 				raise
 			except:
@@ -247,7 +247,7 @@ class db:
 					self.conn.commit()
 				logging.info("Database Delete: Table: " + tableName + " -- Fields: " + str(fields) + " -- Data: " + str(data))
 				return True
-			except sqlite3.Error as e
+			except sqlite3.Error as e:
 				logging.exception("Database error: " + str(e.args[0]))
 				raise
 			except:
@@ -272,7 +272,7 @@ class db:
 					self.conn.commit()
 				logging.info("Database Delete: Table: " + tableName + " -- Application: " + data[idPos] + " -- Fields: " + str(fields) + " -- Data: " + str(data))
 				return True
-			except sqlite3.Error as e
+			except sqlite3.Error as e:
 				logging.exception("Database error: " + str(e.args[0]))
 				raise
 			except:
@@ -322,7 +322,7 @@ class db:
 					self.conn.commit()
 				logging.info("Database Update: Table: " + tableName + " -- Column Fields: " + str(colFields) + " -- Restrictions: " + str(colRestrict) + " -- Set Fields: " + str(setFields) + " -- Set To: " + str(setToFields))
 				return True
-			except sqlite3.Error as e
+			except sqlite3.Error as e:
 				logging.exception("Database error: " + str(e.args[0]))
 				raise
 			except:
@@ -348,7 +348,7 @@ class db:
 					self.conn.commit()
 				logging.info("Database Update: Table: " + tableName + " -- Application: " + colRestrict[idPos]  + " -- Column Fields: " + str(colFields) + " -- Restrictions: " + str(colRestrict) + " -- Set Fields: " + str(setFields) + " -- Set To: " + str(setToFields))
 				return True
-			except sqlite3.Error as e
+			except sqlite3.Error as e:
 				logging.exception("Database error: " + str(e.args[0]))
 				raise
 			except:
