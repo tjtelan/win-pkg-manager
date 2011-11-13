@@ -21,14 +21,14 @@ def add_app(db, appName, version, dlURL, mainURL, uninstallFirst = False, numOld
 		# Only insert if application unique
 		db.query('Application', appName)
 		if db.retrieve(1) != []:
-			print "An application already exists with that name."
+			print("An application already exists with that name.")
 			return False
 
 		# Insert Data (Unique application)
 		db.insert('Application', fields, data)
 		return True
 	except:
-		print "An error occurred when insterting the application's data."
+		print("An error occurred when insterting the application's data.")
 		return False
 
 # add_regex
@@ -43,7 +43,7 @@ def add_regex(db, appName, regex):
 			db.insert('RegExpr', fields, (appName, re))
 		return True
 	except:
-		print "An error occurred when insterting the application's regular expression data."
+		print("An error occurred when insterting the application's regular expression data.")
 		return False
 
 # add_scripts
@@ -58,7 +58,7 @@ def add_scripts(db, appName, scriptNames):
 			db.insert('Scripts', fields, (appName, script))
 		return True
 	except:
-		print "An error occurred when insterting the application's script data."
+		print("An error occurred when insterting the application's script data.")
 		return False
 
 # add_file
@@ -72,7 +72,7 @@ def add_file(db, appName, currEXEFileName, localEXELocation, EXEType):
 		db.insert('Files', fields, data)
 		return True
 	except:
-		print "An error occurred when insterting the application's file data."
+		print("An error occurred when insterting the application's file data.")
 		return False
 
 # add_dependencies(db, appName, dependList)
@@ -94,7 +94,7 @@ def add_dependencies(db, appName, dependList):
 			else:
 				False
 	except:
-		print "An error occurred when inserting dependencies into the database."
+		print("An error occurred when inserting dependencies into the database.")
 		return False
 
 # get_applications
@@ -109,7 +109,7 @@ def get_applications(db):
 		else:
 			return (False, [])
 	except:
-		print "An error occurred when retrieving application names from database."
+		print("An error occurred when retrieving application names from database.")
 		return (False, [])
 
 # get_app_version
@@ -125,7 +125,7 @@ def get_app_version(db, appName):
 		else:
 			return (False, [])
 	except:
-		print "An error occurred when retrieving application names from database."
+		print("An error occurred when retrieving application names from database.")
 		return (False, [])
 
 
@@ -142,7 +142,7 @@ def get_app_urls(db, appName):
 		else:
 			return (False, [])
 	except:
-		print "An error occurred when retrieving application names from database."
+		print("An error occurred when retrieving application names from database.")
 		return (False, [])
 
 # get_dependencies
@@ -157,5 +157,5 @@ def get_dependencies(db, appName):
 		l = db.retrieve()
 		return (True, list(itertools.chain.from_iterable(l)))
 	except:
-		print "An error occurred when retrieving application dependencies from the database."
+		print("An error occurred when retrieving application dependencies from the database.")
 		return (False, [])
