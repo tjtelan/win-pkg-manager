@@ -4,6 +4,7 @@ import os, argparse, logging
 from wpm_db import db
 from wpm_app import app
 
+
 class shell:
     # __init__
     #
@@ -16,9 +17,10 @@ class shell:
         self.parser = argparse.ArgumentParser(prog="winpkg", usage="%(prog)s [options] command ... [pkg_name]", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         # Optional flags
-        self.parser.add_argument("-a", "--all", action="store_true", help="Do with all the installed packages")
-        self.parser.add_argument("-A", "--afterinstall", metavar="CMD", nargs=1, help="Run the specified command after each installation")
-        self.parser.add_argument("-B", "--beforeinstall", metavar="CMD", nargs=1, help="Run the specified command before each installation")
+        # TODO: quiet flag?
+        self.parser.add_argument("-a", "--all", action="store_true", help="Do with all the installed packages (implies -rR)")
+        self.parser.add_argument("-A", "--after-install", metavar="CMD", nargs=1, help="Run the specified command after each installation")
+        self.parser.add_argument("-B", "--before-install", metavar="CMD", nargs=1, help="Run the specified command before each installation")
         self.parser.add_argument("-e", "--emit-summaries", action="store_true", help="Emit summary info after each package processing")
         self.parser.add_argument("-f", "--force", action="store_true", help="Force the upgrade of a package even if it is to be a downgrade or just a reinstall")
         self.parser.add_argument("-F", "--fetch-only", action="store_true", help="Only fetch packages. Do not build or install anything")
@@ -33,7 +35,7 @@ class shell:
 
         # Positional arguments
         self.parser.add_argument("command", choices=["info", "update", "install", "remove"], action="store", help="")
-        self.parser.add_argument("pkg_name", nargs="*", action=cmdProg, help="Package(s) to act on")
+        self.parser.add_argument("pkg_name", nargs="*", action=processCmd, help="Package(s) to act on")
 
     # cmd
     #
@@ -49,79 +51,139 @@ class shell:
             #print("all_switch: =", self.args.all)
             return 0
 
-# Custom action to control execution database queries and application calls
-class cmdProg(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        #print("namespace: %r \nvalues: %r \noption_string %r" % (namespace, values, option_string))
+# Custom action to interpret argument flags, direct execution database queries and application calls
+# TODO: overload print function to check for flag.verbose
+class processCmd(argparse.Action):
+    def __call__(self, parser, flag, pkg_list, option_string=None):
+        #print("flag: %r \nvalues: %r \noption_string %r" % (namespace, values, option_string))
 
-        progs = []
-        progs.extend(values)
+        # Set custom log file location
+        if flag.log_file:
+            pass
+            # Try to set location as log file path and name
+            # Exit on fail
+
+
+        pkg_order = []
+        pkg_order.extend(pkg_list)
 
         # "-a" flag implies upward and downward recursive
-        if namespace.all:
-            namespace.recursive = True
-            namespace.upward_recursive = True
+        if flag.all:
+            flag.recursive = True
+            flag.upward_recursive = True
 
-        # TODO: Build program execution list that looks like:
-        #  [ prog1, prog1_depends, prog2, prog2_depends... ]
+        # Program execution list looks like:
+        # [ prog1, prog1_depends..., progN, progN_depends..., ]
 
-        for program in values:
-            # Check on the status of dependencies of `program"
-            if namespace.recursive:
+        # TODO: Is one level of dependency checking sufficient?
+        for pkg in pkg_list:
+            # Check on the status of dependencies of `pkg"
+            if flag.recursive:
                 test_depends = ["dep1", "dep2", "dep3"]
-                print("Query for dependencies of %s" % program)
+                print("Query for dependencies of %s" % pkg)
 
-                # append these programs to list progs
+                # TODO: Use data from db queries
+                # append to execution list
                 for deps in test_depends:
-                    print("Adding %s as a dependency to %s" % (deps, program))
-                    progs.insert(progs.index(program)+1, deps)
+                    print("Adding %s as a dependency to %s" % (deps, pkg))
+                    pkg_order.insert(pkg_order.index(pkg)+1, deps)
 
-            # Check on the status of programs that depend on `program"
-            if namespace.upward_recursive:
+            # Check on the status of programs that depend on `pkg"
+            if flag.upward_recursive:
                 test_updepends = ["Udep1", "Udep2", "Udep3"]
-                print("Query for programs which have %s as a dependency" % program)
+                print("Query for programs which have %s as a dependency" % pkg)
 
-                # append these programs to list progs
+                # TODO: Use data from db queries
+                # append to execution list
                 for deps in test_updepends:
-                    print("Adding %s as a dependency to %s" % (deps, program))
-                    progs.insert(progs.index(program)+1, deps)
+                    print("Adding %s as a dependency to %s" % (deps, pkg))
+                    pkg_order.insert(pkg_order.index(pkg)+1, deps)
 
-        print("Order of execution: %s\n" % progs)
+        #if flag.verbose:
+        print("Order of execution: %s\n" % pkg_order)
 
-        for program in reversed(progs):
 
-            print("Performing %s on %s" % (namespace.command, program))
+        # If no packages defined in execution:
+            # `info` should spit out detail on all installed packages
+            # `update` should attempt to update all installed packages
 
-            #if namespace.verbose:
-            print("Query for %s in db" % program)
+        # TODO: Feature creep - Should skip current program on ^C and move to next
+        # TODO:               - if none or wildcards in pkg, Query for installed packages before entering loop
 
-            print("DB: Query for version info for %s" % program)
-            print("DB: Check if %s has been checked for \'out-of-date-ness\' recently" % program)
-            print("APP: Check for current version if needed\n")
+        if len(pkg_order) == 0 and (flag.command == "info" or flag.command == "update") :
 
-            if (namespace.command == "info"):
-                print("SHELL: Print name, current installed version, and newest version (if out of date), otherwise say \'up to date\'")
-                print("(SHELL: May need to support wildcards? For uses like \'$ winpkg info *\' OR support input for 0 or more programs, with default all for 0)\n")
-                print("DB: Possibly need a way to return all installed programs if run with no specific program")
-            elif (namespace.command == "update"):
-                print("APP: Go out and download installer")
-                print("APP: Run through update script (This will need fitting to each program)")
-                print("DB: Update version information for %s when complete\n" % program)
-                print("(APP: Probably need to have functionality to update all installed programs when shell run with no program)")
-            elif (namespace.command == "install"):
-                print("(Install is assumed to be interactive in most cases, but could add functionality later to be batched)")
-                print("SHELL: Ask for details for the installer (Programs will have to be fitted to this package manager)")
-                print("DB: Create a new profile using those defaults")
-                print("APP: Fetch and install using info from the DB\n")
-            elif (namespace.command == "remove"):
-                print("DB: Check for an uninstaller")
-                print("APP: Run uninstaller if DB says there is one")
-                print("APP: Run uninstall script, if you had to create one with the installer")
-                print("APP: Respond with error if %s cannot be uninstalled with this tool" % program)
-                print("DB: Remove profile from DB if successfullly removed\n")
+            if flag.command == "info":
+                self.cmdInfo(None, flag)
             else:
-                print("Problem. Shouldn\'t ever make it here\n")
+                self.cmdUpdate(None, flag)
+        else:
+            for pkg in reversed(pkg_order):
+
+                #if flag.verbose:
+#                print("Performing %s on %s" % (flag.command, pkg))
+#                print("Query for %s in db" % pkg)
+#
+#                print("DB: Query for version info for %s" % pkg)
+#                print("DB: Check if %s has been checked for \'out-of-date-ness\' recently" % pkg)
+#                print("APP: Check for current version if needed\n")
+
+                if (flag.command == "info"):
+                    self.cmdInfo(pkg, flag)
+                elif (flag.command == "update"):
+                    self.cmdUpdate(pkg, flag)
+                elif (flag.command == "install"):
+                    self.cmdInstall(pkg, flag)
+                elif (flag.command == "remove"):
+                    self.cmdRemove(pkg, flag)
+                else:
+                    print("Problem. Shouldn\'t ever make it here\n")
+
+    def cmdInfo(self, pkg, flag):
+        pass
+
+        # if pkg = None:
+            # Query for all installed packages
+        # else:
+            # Query db
+            # ()
+            # throw error -- db not available
+
+        # if flag.keep_going OR return true:
+            # pass
+        # else
+            # throw error -- pkg not found
 
 
+        # if pkg hasn't been version checked "recently" and !(flag.no_execute):
+            # Check if out of date
+                # download new version if available
+                # set out-of-date
+            # else:
+                # set up-to-date
 
+            # Update db, saying check was made
+
+        # print pkg,  version number and up-to-date status
+
+    def cmdUpdate(self, pkg, flag):
+        pass
+#        print("APP: Go out and download installer")
+#        print("APP: Run through update script (This will need fitting to each program)")
+#        print("DB: Update version information for %s when complete\n" % pkg)
+#        print("(APP: Probably need to have functionality to update all installed programs when shell run with no program)")
+
+    def cmdInstall(self, pkg, flag):
+        pass
+#        print("(Install is assumed to be interactive in most cases, but could add functionality later to be batched)")
+#        print("SHELL: Ask for details for the installer (Programs will have to be fitted to this package manager)")
+#        print("DB: Create a new profile using those defaults")
+#        print("APP: Fetch and install using info from the DB\n")
+
+    def cmdRemove(self, pkg, flag):
+        pass
+#        print("DB: Check for an uninstaller")
+#        print("APP: Run uninstaller if DB says there is one")
+#        print("APP: Run uninstall script, if you had to create one with the installer")
+#        print("APP: Respond with error if %s cannot be uninstalled with this tool" % pkg)
+#        print("DB: Remove profile from DB if successfullly removed\n")
 
