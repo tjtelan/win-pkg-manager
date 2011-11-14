@@ -7,6 +7,7 @@
 ########################################################################
 
 # re for regex, urllib2 for downloading.
+from db_wrapper import *
 import re, urllib2
 
 class app:
@@ -20,6 +21,12 @@ class app:
         self.dl_regex = dl_regex
         self.name = name
         self.dl_url = ''
+
+
+
+    def __init__(self, db_object):
+
+        print ("Initialized application")
 
     def __del__(self):
         pass

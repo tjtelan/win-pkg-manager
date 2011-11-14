@@ -2,11 +2,11 @@
 
 import os, argparse, logging
 from wpm_db import db
-#from wpm_app import app
+from wpm_app import app
 
 class shell:
     # __init__
-    # 
+    #
     # Initializes the command line interface for Windows Package Manager
     def __init__(self, logFileName):
 
@@ -36,7 +36,7 @@ class shell:
         self.parser.add_argument("pkg_name", nargs="*", action=cmdProg, help="Package(s) to act on")
 
     # cmd
-    # 
+    #
     # Takes in sys.argv, trims off sys.argv[0] and run command
     # TODO: This needs to be fixed to print help if programs aren"t supplied
     def cmd(self, argv=""):

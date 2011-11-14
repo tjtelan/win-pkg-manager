@@ -145,12 +145,28 @@ def get_app_urls(db, appName):
 		print("An error occurred when retrieving application names from database.")
 		return (False, [])
 
+# get_app_regex
+# Parameters: db is a database class object
+#							appName is a string
+# Return: Tuple of the form (Bool, List), list contains strings
+#					bool is true if successful, false otherwise
+def get_app_regex(db, appName):
+	try:
+		if db.query("RegExpr", appName, ("Expression",)):
+			l = db.retrieve()
+			return (True, list(itertools.chain.from_iterable(l)))
+		else:
+			return (False, [])
+	except:
+		print("An error occurred when retrieving application names from database.")
+		return (False, [])
+
 # get_dependencies
 # Parameters: db is a database class object
 #							appName is a string
 # Return: Tuple of the form (Bool, List)
 #					bool is true if successful, false otherwise
-def get_dependencies(db, appName):
+def get_app_dependencies(db, appName):
 	try:
 		if not db.query("Dependencies", appName, ("ApplicationName",), True):
 			return (False, [])
