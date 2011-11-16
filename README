@@ -1,0 +1,41 @@
+Windows Package Manager
+
+The main goal of this application is to meet the needs of the Western Washington University -
+Computer Science department. However, the design kept general purpose use in mind.
+
+The `winpkg` CLI frontend was inspired by FreeBSD's portsnap & portupgrade suite, and those
+familiar with the latter may recognize most of the flags and equivalent functionalities.
+
+Features:
+
+TODO
+
+Requirements:
+
+Python 2.7
+sqlite
+
+
+Installation:
+
+TODO
+
+
+Basic Usage:
+
+TODO
+
+    Installing new packages:
+
+    Check installed packages for new versions:
+
+    Upgrading installed packages:
+
+    Create new packages for winpkg:
+
+-------------------------------------------------------------------------------
+Western Washington University
+Computer Science Department - 2011
+Sebastian J. Imlay
+Joshua Stein
+T.J. Telan
