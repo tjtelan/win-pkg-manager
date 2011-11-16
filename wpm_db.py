@@ -30,7 +30,7 @@ class db:
 		tableNames = [("Statistics",),("Application",),("RegExpr",),("Scripts",),("Dependencies",),("Files",),("OldFiles",)]
 
 		tableConstruct = ["CREATE TABLE Statistics(ID INTEGER PRIMARY KEY, NumUpdatesNeeded INTEGER, NumSuccUpdates INTEGER, Date TEXT)",
-		"CREATE TABLE Application(ID INTEGER PRIMARY KEY, ApplicationName TEXT, CurrentVersionNum TEXT, DownloadURL TEXT, MainURL TEXT, UninstallFirst BOOLEAN, NumOldVersionsToKeep INTEGER)",
+		"CREATE TABLE Application(ID INTEGER PRIMARY KEY, ApplicationName TEXT, CurrentVersionNum TEXT, DownloadURL TEXT, MainURL TEXT, UninstallFirst BOOLEAN, NumOldVersionsToKeep INTEGER, Timestamp TEXT)",
 		"CREATE TABLE RegExpr(ApplicationID INTEGER REFERENCES Application(ID), Expression TEXT)",
 		"CREATE TABLE Scripts(ID INTEGER PRIMARY KEY, ApplicationID INTEGER REFERENCES Application(ID), Script TEXT)",
 		"CREATE TABLE Dependencies(ID INTEGER PRIMARY KEY, ApplicationID INTEGER REFERENCES Application(ID), Dependency INTEGER REFERENCES Application(ID))",
@@ -128,7 +128,7 @@ class db:
 		else:	
 			qField.append(" FROM ")
 			qField.append(tableName)
-			qField.append(" WHERE ApplicationID IN (SELECT ApplicationID FROM Application WHERE ApplicationName=?)")
+			qField.append(" WHERE ApplicationID IN (SELECT ID FROM Application WHERE ApplicationName=?)")
 		qField = "".join(qField)
 
 		# Execute sql queries
