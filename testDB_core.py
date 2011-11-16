@@ -15,7 +15,8 @@ for item in qList:
 	print(item)
 
 print("\nAfter deletion")
-mydb.delete("RegExpr", ("ApplicationID", "Expression"), ("App", "[a-z]"))
+#mydb.delete("RegExpr", ("ApplicationID", "Expression"), ("App", "[a-z]"))
+mydb.delete("RegExpr", ("ApplicationID", ), ("App", ))
 mydb.query("RegExpr", "App")
 qList = mydb.retrieve(3)
 for item in qList:
@@ -38,17 +39,3 @@ qList = mydb.retrieve(3)
 for item in qList:
 	print(item)
 
-print("----------------DB Wrapper Test-------------------")
-print("Unique App Insert Test", db_wrapper.add_app(mydb, "latestApp", "1.2.3", "http://test.com", "http://test.com/dl"))
-print(db_wrapper.get_applications(mydb))
-print("Non-Unique App Insert Test", db_wrapper.add_app(mydb, "latestApp", "1.2.3", "http://test.com", "http://test.com/dl"))
-print("Get Version Test", db_wrapper.get_app_version(mydb, "latestApp"))
-print("Get URLs Test", db_wrapper.get_app_urls(mydb, "latestApp"))
-print("Add Dependencies", db_wrapper.add_dependencies(mydb, "App", ["latestApp"]))
-print("Get Dependency Name", db_wrapper.get_dependencies(mydb, "App"))
-mydb.query("Dependencies", "App")
-qList = mydb.retrieve(1)
-print(qList)
-print("Add Dependencies - Error", db_wrapper.add_dependencies(mydb, "App", ["DNE"]))
-print("Add Regex", db_wrapper.add_regex(mydb, "App", ["[4,2]", "[1-3]"]))
-print("Get Regex", db_wrapper.get_app_regex(mydb, "App"))
