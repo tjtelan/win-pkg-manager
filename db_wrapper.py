@@ -88,21 +88,6 @@ def add_scripts(db, appName, scriptNames):
 		insertions.insert(0, False)
 		return insertions
 
-# add_file
-# Parameters: db is a database class object
-#							All other parameters are strings
-# Return: List of bools, first indicates successful db operation, all others
-#           represent if item was able to be inserted (unique)
-def add_file(db, appName, currEXEFileName, localEXELocation, EXEType):
-	fields = ['ApplicationID', 'CurrEXEFileName', 'LocalEXELocation', 'EXEType']
-	data = [appName, currEXEFileName, localEXELocation, EXEType]	
-	try:
-		insertion = db.insert('Files', fields, data)
-		return [True, insertion]
-	except:
-		print("An error occurred when inserting the application's file data.")
-		return [False, False]
-
 
 # add_dependencies(db, appName, dependList)
 # Parameters: db is a database class object
@@ -140,6 +125,65 @@ def add_dependencies(db, appName, dependList):
 		print("An error occurred when inserting dependencies into the database.")
 		insertions.insert(0, False)
 		return insertions
+
+
+# add_update_file
+# Parameters: db is a database class object
+#							All other parameters are strings
+# Functionality: If only versionNum is given, updates version number of application
+#								 If every variable is defined, performs a full add/update
+#	Standard Usage: All fields defined. May cause inconsistency between current file and version otherwise
+# Return: True if successful, false otherwise
+def add_update_file(db, appName, versionNum, currEXEFileName = None, localEXELocation = None, EXEType = None):
+	try:
+		if currEXEFileName == None or localEXELocation == None or EXEType == None:
+			return db.update("Application", ("CurrentVersionNum",), (versionNum,), ("ApplicationName",), (appName,))
+	
+		# Suspend commits - Prevent inconsistent states from multiple sql statements
+		db.change_commit(False)
+		if not db.query("Application", appName, ("CurrentVersionNum", "NumOldVersionsToKeep")):
+			db.rollback()
+			return False
+		appList = db.retrieve(1)
+
+	 	if not db.update("Application", ("CurrentVersionNum","Timestamp"), (versionNum, str(time.time())), ("ApplicationName",), (appName,)):
+			db.rollback()
+			return False
+
+		# Add new file if application has none yet
+		if not db.query("Files", appName, ("CurrEXEFileName",)):
+			db.rollback()
+			return False	
+		currFile = db.retrieve(1)
+		
+		fields = ['ApplicationID', 'CurrEXEFileName', 'LocalEXELocation', 'EXEType']
+		data = [appName, currEXEFileName, localEXELocation, EXEType]
+		if currFile == []:
+			if not db.insert('Files', fields, data):
+				db.rollback()
+				return False
+		else:
+			if not db.update('OldFiles', ('OldCount',), ('@OldCount + 1',), ('ApplicationID',), (appName,)):
+				db.rollback()
+				return False
+			if not db.insert('OldFiles', ('ApplicationID', 'OldVersionNum', 'OldEXEFileName','OldCount'), \
+											 (appName, appList[0][0] ,currFile[0][0], 1)):
+				db.rollback()
+				return False
+			if not db.delete('OldFiles', ('ApplicationID', 'OldCount'), (appName, appList[0][1] + 1)):
+				db.rollback()
+				return False
+			if not db.insert('Files', fields, data):
+				db.rollback()
+				return False
+	
+		db.change_commit(True)
+		return True
+	except:
+		print("An error occurred when updating version and/or adding file into database.")
+		db.rollback()
+		return False
+
 
 
 #######################################################################
@@ -195,6 +239,7 @@ def get_app_urls(db, appName):
 	except:
 		print("An error occurred when retrieving application names from database.")
 		return (False, [])
+
 
 # get_app_regex
 # Parameters: db is a database class object
@@ -260,6 +305,29 @@ def get_app_uninstallFirst(db, appName):
 	except:
 		print("An error occurred when retrieving application uninstallFirst flag from the database.")
 		return (False, False)
+
+
+# get_app_currFile
+# Parameters: db is a database class object
+#							appName is a string
+# Return: Tuple of the form (Bool, List)
+#					bool is true if successful, false otherwise
+def get_app_currFile(db, appName):
+	try:
+		if not db.query("Files", appName):
+			return (False, [])
+		l = db.retrieve()
+		return (True, l)
+	except:
+		print("An error occurred when retrieving application files from the database.")
+		return (False, [])
+
+
+# get_app_oldFiles
+# Parameters: db is a database class object
+#							appName is a string
+# Return: Tuple of the form (Bool, List)
+#					bool is true if successful, false otherwise
 
 
 #######################################################################

@@ -77,6 +77,7 @@ class db:
 	# Returns: None
 	# Changes whether insert/update/delete commit after execution
 	def change_commit(self, commitBool):
+		self.conn.commit()
 		self.commit = commitBool
 
 
