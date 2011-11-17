@@ -193,10 +193,6 @@ def get_app_urls(db, appName):
 		print("An error occurred when retrieving application names from database.")
 		return (False, [])
 
-<<<<<<< HEAD
-
-=======
->>>>>>> f82551751a213876383c551884acc384ab0c262f
 # get_app_regex
 # Parameters: db is a database class object
 #							appName is a string
@@ -213,12 +209,7 @@ def get_app_regex(db, appName):
 		print("An error occurred when retrieving application names from database.")
 		return (False, [])
 
-<<<<<<< HEAD
-
 # get_app_dependencies
-=======
-# get_dependencies
->>>>>>> f82551751a213876383c551884acc384ab0c262f
 # Parameters: db is a database class object
 #							appName is a string
 # Return: Tuple of the form (Bool, List)

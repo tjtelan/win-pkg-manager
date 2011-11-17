@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import wpm_db
-import db_wrapper
 
 mydb = wpm_db.db("dbFile", "dbLog")
 
@@ -15,8 +14,7 @@ for item in qList:
 	print(item)
 
 print("\nAfter deletion")
-#mydb.delete("RegExpr", ("ApplicationID", "Expression"), ("App", "[a-z]"))
-mydb.delete("RegExpr", ("ApplicationID", ), ("App", ))
+mydb.delete("RegExpr", ("ApplicationID", "Expression"), ("App", "[a-z]"))
 mydb.query("RegExpr", "App")
 qList = mydb.retrieve(3)
 for item in qList:
@@ -33,9 +31,17 @@ mydb.query("Application", "App")
 qList = mydb.retrieve(1)
 print(qList)
 
+print ("\nDoesn't commit")
+mydb.change_commit(False)
 mydb.update("RegExpr", ("Expression",), ("^[4-5]",), ("ApplicationID",), ("App", ))
 mydb.query("RegExpr", "App")
 qList = mydb.retrieve(3)
 for item in qList:
 	print(item)
 
+print ("\nRollback")
+mydb.rollback()
+mydb.query("RegExpr", "App")
+qList = mydb.retrieve(3)
+for item in qList:
+	print(item)

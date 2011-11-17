@@ -63,17 +63,30 @@ class db:
 
 	# close
 	# Parameters: None
-	# Close database connection and save any changes made to the database
+	# Close database connection and save any changes made to the database, if needed
 	def close(self):
-		self.conn.commit()
+		if self.commit:
+			self.conn.commit()
 		self.cursor.close()
 		self.conn.close()
 		logging.info("Database: Changes saved and connection closed")
 
-	
+
+	# change_commit
+	# Parameters: commitBool is a boolean
+	# Returns: None
+	# Changes whether insert/update/delete commit after execution
 	def change_commit(self, commitBool):
 		self.commit = commitBool
 
+	# rollback
+	# Parameters: None
+	# Returns: None
+	# Returns to last commit and turns commit back to True
+	def rollback(self):
+		self.conn.rollback()
+		self.cursor = self.conn.cursor()
+		self.commit = True
 
 	# retrieve
 	# Parameters: num is an integer, none indicates fetchall
