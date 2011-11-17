@@ -79,6 +79,7 @@ class db:
 	def change_commit(self, commitBool):
 		self.commit = commitBool
 
+
 	# rollback
 	# Parameters: None
 	# Returns: None
@@ -87,6 +88,7 @@ class db:
 		self.conn.rollback()
 		self.cursor = self.conn.cursor()
 		self.commit = True
+
 
 	# retrieve
 	# Parameters: num is an integer, none indicates fetchall

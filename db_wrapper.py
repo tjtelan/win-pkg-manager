@@ -10,6 +10,10 @@ import wpm_db
 import itertools
 import time
 
+#######################################################################
+# Add Functions
+#######################################################################
+
 # add_app
 # Parameters: db is a database class object
 #							All other parameters are strings except unistallFirst(bool) 
@@ -138,10 +142,9 @@ def add_dependencies(db, appName, dependList):
 		return insertions
 
 
-
-
-
-
+#######################################################################
+# Get/Retrieve Functions
+#######################################################################
 
 # get_applications
 # Parameters: db is a database class object
@@ -259,8 +262,9 @@ def get_app_uninstallFirst(db, appName):
 		return (False, False)
 
 
-
-
+#######################################################################
+# Update Functions
+#######################################################################
 
 # update_main_url
 # Parameters: db is a database class object
@@ -288,9 +292,9 @@ def update_download_url(db, appName, dlURL):
 		return False
 
 
-
-
-
+#######################################################################
+# Delete Functions
+#######################################################################
 
 # del_app_regex
 # Parameters: db is a database class object
