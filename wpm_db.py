@@ -58,6 +58,8 @@ class db:
 	# Parameters: None
 	# Close database connection and save any changes made to the database
 	def __del__(self):
+		if self.commit:
+			self.conn.commit()
 		self.close()
 
 
@@ -315,11 +317,14 @@ class db:
 		s_len = len(setFields)
 		c_len = len(colRestrict)
 
-		qField = ["UPDATE ", tableName, " SET ", setFields[0], "=?"]
+		qField = ["UPDATE ", tableName, " SET ", setFields[0], "=OldCount + 1" if (setFields[0] == "OldCount") else "=?"]
 		for ix in range(1,s_len):
 			qField.append(",")
 			qField.append(setFields[ix])
-			qField.append("=?")
+			if (setFields[ix] == "OldCount"):
+				qField.append("=OldCount + 1")
+			else:
+				qField.append("=?")
 		qField.append(" WHERE ")
 		qField.append(colFields[0])
 		qField.append("=?")
@@ -358,7 +363,7 @@ class db:
 				appID = self.cursor.fetchone()
 				qData = list(colRestrict)
 				qData[idPos] = appID[0]
-				qData = list(setToFields) + qData
+				qData = filter(lambda x: x != "OldCount + 1", list(setToFields)) + qData
 				self.cursor.execute(qField, qData)
 				if self.commit:
 					self.conn.commit()

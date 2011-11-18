@@ -135,7 +135,7 @@ def add_dependencies(db, appName, dependList):
 #	Standard Usage: All fields defined. May cause inconsistency between current file and version otherwise
 # Return: True if successful, false otherwise
 def add_update_file(db, appName, versionNum, currEXEFileName = None, localEXELocation = None, EXEType = None):
-	try:
+#	try:
 		if currEXEFileName == None or localEXELocation == None or EXEType == None:
 			return db.update("Application", ("CurrentVersionNum",), (versionNum,), ("ApplicationName",), (appName,))
 	
@@ -163,7 +163,10 @@ def add_update_file(db, appName, versionNum, currEXEFileName = None, localEXELoc
 				db.rollback()
 				return False
 		else:
-			if not db.update('OldFiles', ('OldCount',), ('@OldCount + 1',), ('ApplicationID',), (appName,)):
+			if not db.delete('Files', ('ApplicationID',),(appName,)):
+				db.rollback()
+				return False
+			if not db.update('OldFiles', ('OldCount',), ('OldCount + 1',), ('ApplicationID',), (appName,)):
 				db.rollback()
 				return False
 			if not db.insert('OldFiles', ('ApplicationID', 'OldVersionNum', 'OldEXEFileName','OldCount'), \
@@ -179,10 +182,10 @@ def add_update_file(db, appName, versionNum, currEXEFileName = None, localEXELoc
 	
 		db.change_commit(True)
 		return True
-	except:
-		print("An error occurred when updating version and/or adding file into database.")
-		db.rollback()
-		return False
+#	except:
+#		print("An error occurred when updating version and/or adding file into database.")
+#		db.rollback()
+#		return False
 
 
 
@@ -328,7 +331,15 @@ def get_app_currFile(db, appName):
 #							appName is a string
 # Return: Tuple of the form (Bool, List)
 #					bool is true if successful, false otherwise
-
+def get_app_oldFiles(db, appName):
+	try:
+		if not db.query("OldFiles", appName):
+			return (False, [])
+		l = db.retrieve()
+		return (True, l)
+	except:
+		print("An error occurred when retrieving old application files from the database.")
+		return (False, [])
 
 #######################################################################
 # Update Functions
