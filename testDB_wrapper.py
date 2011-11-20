@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import wpm_db
 import db_wrapper
+import time
 
 mydb = wpm_db.db("dbFile", "dbLog")
 
@@ -45,3 +46,11 @@ print("Get Old Files - After 2nd Insertion", db_wrapper.get_app_oldFiles(mydb, "
 print("Add File - Non-Empty Table", db_wrapper.add_update_file(mydb, "latestApp", "1.7", "install1-7.exe", "installers/", "exe")) 
 print("Get Current File - After 3rd Insertion", db_wrapper.get_app_currFile(mydb, "latestApp"))
 print("Get Old Files - After 3rd Insertion", db_wrapper.get_app_oldFiles(mydb, "latestApp"))
+print("Add Statistics - 1", db_wrapper.add_stats(mydb, 36, 20))
+print("Add Statistics - 2", db_wrapper.add_stats(mydb, 100, 90))
+time.sleep(10)
+print("Add Statistics - 3", db_wrapper.add_stats(mydb, 45, 44))
+print("Add Statistics - 4", db_wrapper.add_stats(mydb, 32, 2))
+print("Add Statistics - 5", db_wrapper.add_stats(mydb, 9, 5))
+print("Get Statistics - All", db_wrapper.get_stats(mydb))
+print("Get Statistics - Range", db_wrapper.get_stats(mydb, [int(time.time()) - 5, int(time.time()) + 5]))

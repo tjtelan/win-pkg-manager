@@ -135,7 +135,7 @@ def add_dependencies(db, appName, dependList):
 #	Standard Usage: All fields defined. May cause inconsistency between current file and version otherwise
 # Return: True if successful, false otherwise
 def add_update_file(db, appName, versionNum, currEXEFileName = None, localEXELocation = None, EXEType = None):
-#	try:
+	try:
 		if currEXEFileName == None or localEXELocation == None or EXEType == None:
 			return db.update("Application", ("CurrentVersionNum",), (versionNum,), ("ApplicationName",), (appName,))
 	
@@ -182,11 +182,27 @@ def add_update_file(db, appName, versionNum, currEXEFileName = None, localEXELoc
 	
 		db.change_commit(True)
 		return True
-#	except:
-#		print("An error occurred when updating version and/or adding file into database.")
-#		db.rollback()
-#		return False
+	except:
+		print("An error occurred when updating version and/or adding file into database.")
+		db.rollback()
+		return False
 
+
+# add_stats
+# Parameters: db is a database class object
+#							numUpdatesNeeded is an integer
+#							numSuccUpdates is an integer (successful updates)
+# Return: True if successful, false otherwise
+def add_stats(db, numUpdatesNeeded, numSuccUpdates):
+	fields = ['NumUpdatesNeeded', 'NumSuccUpdates', 'Timestamp']
+	data = [numUpdatesNeeded, numSuccUpdates, str(time.time())]
+#	try:
+	if not db.insert("Statistics", fields, data):
+		return False
+	return True
+#	except:
+#		print("An error occurred when adding statistics into the database.")
+#		return False
 
 
 #######################################################################
@@ -340,6 +356,23 @@ def get_app_oldFiles(db, appName):
 	except:
 		print("An error occurred when retrieving old application files from the database.")
 		return (False, [])
+
+
+# get_stats
+# Parameters: db is a database class object
+#							timeRange is either an empty list of a list of two integers
+# Return: Tuple of the form (Bool, List)
+#					bool is true if successful, false otherwise
+def get_stats(db, timeRange = []):
+	try:
+		if not db.query("Statistics", timeRange = timeRange):
+			return (False, [])
+		l = db.retrieve()
+		return (True, l)
+	except:
+		print("An error occured when retrieving statistics from the database.")
+		return (False, [])
+
 
 #######################################################################
 # Update Functions

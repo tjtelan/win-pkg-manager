@@ -29,7 +29,7 @@ class db:
 		# Tuples with name names and strings of sql queries for table construction
 		tableNames = [("Statistics",),("Application",),("RegExpr",),("Scripts",),("Dependencies",),("Files",),("OldFiles",)]
 
-		tableConstruct = ["CREATE TABLE Statistics(ID INTEGER PRIMARY KEY, NumUpdatesNeeded INTEGER, NumSuccUpdates INTEGER, Date TEXT)",
+		tableConstruct = ["CREATE TABLE Statistics(ID INTEGER PRIMARY KEY, NumUpdatesNeeded INTEGER, NumSuccUpdates INTEGER, Date TEXT, Timestamp TEXT)",
 		"CREATE TABLE Application(ID INTEGER PRIMARY KEY, ApplicationName TEXT, CurrentVersionNum TEXT, DownloadURL TEXT, MainURL TEXT, UninstallFirst BOOLEAN, NumOldVersionsToKeep INTEGER, Timestamp TEXT)",
 		"CREATE TABLE RegExpr(ApplicationID INTEGER REFERENCES Application(ID), Expression TEXT)",
 		"CREATE TABLE Scripts(ID INTEGER PRIMARY KEY, ApplicationID INTEGER REFERENCES Application(ID), Script TEXT)",
@@ -119,13 +119,15 @@ class db:
 	# query
 	# Parameters: tableName and appName are strings
 	#							selectField is a list (or tuple) of table column names
+	#							dependencyNames is True when want names of all apps current appName depends on
+	#							timeRange
 	# Returns: True on success, exception otherwise
 	# Exception: sqlite3.Error if db error
 	# Performs a database query
-	def query(self, tableName=None, appName=None, selectField=('*',), dependencyNames = False):
+	def query(self, tableName=None, appName=None, selectField=('*',), dependencyNames = False, timeRange=[]):
 		
 		# Table and application must be defined
-		if tableName == None or (appName == None and tableName != "Application"):
+		if tableName == None or (appName == None and tableName != "Application" and tableName != "Statistics"):
 			return False
 
 		# Build sql queries
@@ -135,14 +137,22 @@ class db:
 			qField.append(", ")
 			qField.append(selectField[ix + 1])
 
-	
+		# Treat Applications don't need to use ID restrictions may not be desired
 		if tableName == "Application":
 			if appName != None:
 				qField.append(" FROM Application WHERE ApplicationName=?")
 			else:
 				qField.append(" FROM Application")
+		# When dependency table and dependencyNames, combine tables
 		elif tableName == "Dependencies" and dependencyNames:
-			qField.append (" From Application, Dependencies WHERE Application.ID == Dependencies.Dependency AND ApplicationID IN (SELECT ApplicationID FROM Application WHERE ApplicationName=?)")
+			qField.append(" From Application, Dependencies WHERE Application.ID == Dependencies.Dependency AND ApplicationID IN (SELECT ApplicationID FROM Application WHERE ApplicationName=?)")
+		elif tableName == "Statistics":
+			if len(timeRange) == 2:
+				qField.append( " FROM Statistics WHERE Timestamp BETWEEN ? and ?")
+			elif len(timeRange) == 0:
+				qField.append( " FROM Statistics")
+			else:
+				return False
 		else:	
 			qField.append(" FROM ")
 			qField.append(tableName)
@@ -151,10 +161,12 @@ class db:
 
 		# Execute sql queries
 		try:
-			if appName == None:
+			if appName == None and tableName != "Statistics":
 				self.cursor.execute(qField)
-			else:
+			elif tableName != "Statistics":
 				self.cursor.execute(qField, (appName,))
+			else:
+				self.cursor.execute(qField, timeRange)
 				
 			logging.info("Database Query: Application: " + str(appName) + " -- Table: " + tableName + " -- Fields: " + str(selectField))
 			return True
@@ -210,6 +222,7 @@ class db:
 		
 		else:
 			# Find Position of ApplicationID for replacement
+			idPos = d_len
 			for ix in range(d_len):
 				if fields[ix] == "ApplicationID":
 					idPos = ix
@@ -217,14 +230,15 @@ class db:
 			
 			# Get ApplicationID and then insert data into table
 			try:
-				self.cursor.execute("SELECT ID FROM Application WHERE ApplicationName=?", (data[idPos],))
-				appID = self.cursor.fetchone()
 				qData = list(data)
-				qData[idPos] = appID[0]
+				if tableName != 'Statistics':
+					self.cursor.execute("SELECT ID FROM Application WHERE ApplicationName=?", (data[idPos],))
+					appID = self.cursor.fetchone()
+					qData[idPos] = appID[0]
 				self.cursor.execute(qField, qData)
 				if self.commit:
 					self.conn.commit()
-				logging.info("Database Insert: Table: " + tableName + " -- Application: " + data[idPos] + " -- Fields: " + str(fields) + " -- Data: " + str(qData))
+				logging.info("Database Insert: Table: " + tableName + " -- Application: " + data[idPos] if idPos < d_len else "None" + " -- Fields: " + str(fields) + " -- Data: " + str(qData))
 				return True
 			except sqlite3.Error as e:
 				logging.exception("Database error: " + str(e.args[0]))
@@ -317,6 +331,7 @@ class db:
 		s_len = len(setFields)
 		c_len = len(colRestrict)
 
+		# OldFile table needs to increment field, so replacement necessary
 		qField = ["UPDATE ", tableName, " SET ", setFields[0], "=OldCount + 1" if (setFields[0] == "OldCount") else "=?"]
 		for ix in range(1,s_len):
 			qField.append(",")
