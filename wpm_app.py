@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 ########################################################################
 # Group: Windows Package Manager A
 # Name: Sebastian Imlay
@@ -29,11 +31,11 @@ class app:
     #
     # Incomplete function.
     def checkUpdates(self):
-        print "Checking for updates"
+        print ("Checking for updates")
 
         self.dlSite = get_app_urls(self.db, self.name)[1][0]
         self.dl_regex = get_app_regex(self.db, self.name)[1][0]
-        print self.dl_regex
+        print (self.dl_regex)
 
         f = urllib2.urlopen(self.dlSite)
         webHtml = f.read()
