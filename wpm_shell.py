@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 import os, argparse, logging
-from wpm_db import db
+import wpm_db, db_wrapper
 from wpm_app import app
+import time
+from datetime import date
 
 
 class shell:
@@ -54,6 +56,11 @@ class shell:
 # Custom action to interpret argument flags, direct execution database queries and application calls
 # TODO: overload print function to check for flag.verbose
 class processCmd(argparse.Action):
+
+    # TODO: Get rid of this ugly global
+    global mydb
+    mydb = wpm_db.db("dbFile", "dbLog")
+
     def __call__(self, parser, flag, pkg_list, option_string=None):
         #print("flag: %r \nvalues: %r \noption_string %r" % (namespace, values, option_string))
 
@@ -139,29 +146,46 @@ class processCmd(argparse.Action):
                     print("Problem. Shouldn\'t ever make it here\n")
 
     def cmdInfo(self, pkg, flag):
-        pass
 
-        # if pkg = None:
+        if pkg == None:
             # Query for all installed packages
-        # else:
-            # Query db
-            # ()
-            # throw error -- db not available
+            result = db_wrapper.get_applications(mydb)
 
-        # if flag.keep_going OR return true:
-            # pass
-        # else
+            ## Print results to stdout
+            return True
+        else:
+            # Query db for requested package
+            result = db_wrapper.get_app_version(mydb, pkg)
+
+
+        if flag.keep_going or (result[0] == True) :
+            # Get version number
+            # Get up-to-date status 
+            print("true")
+        else:
+            return False
             # throw error -- pkg not found
 
+        # Check if new version has been checked "recently"
+        if (result[0] == True):
 
-        # if pkg hasn't been version checked "recently" and !(flag.no_execute):
-            # Check if out of date
-                # download new version if available
-                # set out-of-date
-            # else:
-                # set up-to-date
+            #print(result[1][1])
+            last_checked = date.fromtimestamp(float(result[1][1]))
+            today = date.fromtimestamp(time.time())
 
-            # Update db, saying check was made
+            # Double check that this compares as expected. Only need to compare days
+            if last_checked < today:
+                # Check if out of date
+                    # download new version if available
+                    # set out-of-date
+
+                # wpm_app.checkUpdates
+
+                # Download updates if they are available and !(flag.no_execute)
+                if !(flag.no_execute):
+                    pass
+                    # wpm_app.dlUpdates
+                    # TODO: Does app or shell update the timestamp after checkUpdates? It needs to be done
 
         # print pkg,  version number and up-to-date status
 
