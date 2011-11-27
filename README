@@ -14,6 +14,7 @@ Requirements:
 
 Python 2.7
 sqlite
+urllib2
 
 
 Installation:
