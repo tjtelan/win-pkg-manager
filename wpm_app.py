@@ -10,94 +10,108 @@
 
 # re for regex, urllib2 for downloading.
 from db_wrapper import *
-import re, urllib2
+import re, urllib2, logging
 
 class app:
 
-
     # Initialize the application using the database object.
-    def __init__(self, app_name, db_object):
-        self.name = app_name
-        self.db = db_object
+    def __init__(self, appName, dbObject, logFileName):
 
-        print ("Initialized application using database for " + app_name + ".")
+        #self.logger = logging.getLogger('Application')
+        #self.logger.setLevel(logging.DEBUG)
+
+        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%a, %d %b %Y %H:%M:%S', filename=logFileName, filemode='a')
+        self.name = appName
+        self.db = dbObject
+        self.dlUrl = ''
+
+        logging.info("Application: Initialized application using database for " + appName + ".")
 
     # abritrary delete function.
     def __del__(self):
-        pass
+        logging.info("Application: Done using Application " + self.name + ".")
 
     # Queries the database for regex(s) and download site(s) then downloads
     # the webpage and checks the regex against it.
     #
     # Incomplete function.
     def checkUpdates(self):
-        print ("Checking for updates")
+        logging.info("Checking for updates for " + self.name + ".")
 
-        self.dlSite = get_app_urls(self.db, self.name)[1][0]
-        self.dl_regex = get_app_regex(self.db, self.name)[1][0]
-        print (self.dl_regex)
+        validURLQuery, urlList = get_app_urls(self.db, self.name)
 
-        f = urllib2.urlopen(self.dlSite)
-        webHtml = f.read()
-        allReturns = re.findall(self.dl_regex, webHtml, re.IGNORECASE)
+        webHtml = ''
 
-    #def checkUpdates(self):
-    #    f = urllib2.urlopen(self.dlSite)
-    #    allReturns = re.findall(self.dl_regex, webHtml, re.IGNORECASE)
+        # make sure it's a list.
+        if validURLQuery and len(urlList) > 1:
 
-    #    if(len(allReturns) > 1):
-    #        print "More than one found"
-    #        for i in allReturns:
-    #            print i
+            dlURL = urlList[0]
 
-    #        dl_url = allReturns[0][5:]
-    #        # Remove beginning quote
-    #        if dl_url[0] == '"':
-    #            dl_url = dl_url[1:]
 
-    #        # Remove ending quote
-    #        if dl_url[len(dl_url) - 1] == '"':
-    #            dl_url = dl_url[:len(dl_url) - 1]
+            f = urllib2.urlopen(str(dlURL))
+            webHtml = f.read()
+            f.close()
 
-    #        self.dl_url = dl_url
+        validRegxQuery, regexList = get_app_regex(self.db, self.name)
+        #self.dl_regex = regexList[0]
+        #allReturns = re.findall(self.dl_regex, webHtml, re.IGNORECASE)
 
-    #    elif len(allReturns) == 0:
-    #        print "Found none!"
-    #    else:
-    #        dl_url = allReturns[0][5:]
-    #        if dl_url[0] == '"':
-    #            dl_url = dl_url[1:]
-
-    #        if dl_url[len(dl_url) - 1] == '"':
-    #            dl_url = dl_url[:len(dl_url) - 1]
-
-    #        print self.name, dl_url
-    #        self.dl_url = dl_url
+        # Pull the version number out of the executable or out of the
+        # webpage.
 
 
     # Download the updates - check for updates first.
     # Not complete (obviously)
     def dlUpdates(self):
-        pass
 
-        #if self.dl_url == '':
-        #    print 'Dl url is null, scrapping the web page.'
-        #    self.checkUpdates()
+        validURLQuery, urlList = get_app_urls(self.db, self.name)
+        webHtml = ''
 
-        #print "Dowloading from:", self.dl_url
+        if validURLQuery:
 
-        #req = urllib2.urlopen(self.dl_url)
-        #output = open(self.name + '.exe', 'wb')
-        #output.write(req.read())
-        #output.close()
+            dlURL = urlList[0]
+            logging.info("Application: Dowloading webpage from: " + dlURL + ".")
+
+            f = urllib2.urlopen(dlURL)
+            webHtml = f.read()
+            f.close()
+
+        validRegxQuery, regexList = get_app_regex(self.db, self.name)
+
+        allReturns = []
+        if validRegxQuery:
+            dl_regex = regexList[0]
+            allReturns = re.findall(dl_regex, webHtml, re.IGNORECASE)
+
+
+        validVersionQuery, versionList = get_app_version(self.db, self.name)
+
+        if(len(allReturns) > 0):
+
+            print "Dowloading executable from:", allReturns
+            dl_url = allReturns[0]
+            dl_url = dl_url[6:len(dl_url) - 1]
+            print "Dowloading executable from:", dl_url
+
+            version = ''
+            if validVersionQuery:
+                version = '.' + versionList[0]
+
+
+            req = urllib2.urlopen(dl_url)
+            output = open(self.name + version + '.exe', 'wb')
+            output.write(req.read())
+            output.close()
+
+
 
 
     # initialize without use of the database.
-    def __init__(self, name, downLoadSite, dl_regex):
-        # Parameters: Database object
-        # log file (in append mode)
-    #def __init__(self, downLoadSite, dl_regex):
-        self.dlSite = downLoadSite
-        self.dl_regex = dl_regex
-        self.name = name
-        self.dl_url = ''
+    #def __init__(self, name, downLoadSite, dl_regex):
+    #    # Parameters: Database object
+    #    # log file (in append mode)
+    ##def __init__(self, downLoadSite, dl_regex):
+    #    self.dlSite = downLoadSite
+    #    self.dl_regex = dl_regex
+    #    self.name = name
+    #    self.dl_url = ''
