@@ -20,23 +20,24 @@ class app:
         #self.logger = logging.getLogger('Application')
         #self.logger.setLevel(logging.DEBUG)
 
-        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%a, %d %b %Y %H:%M:%S', filename=logFileName, filemode='a')
+        #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%a, %d %b %Y %H:%M:%S', filename=logFileName, filemode='a')
         self.name = appName
         self.db = dbObject
         self.dlUrl = ''
 
-        logging.info("Application: Initialized application using database for " + appName + ".")
+        #logging.info("Application: Initialized application using database for " + appName + ".")
 
     # abritrary delete function.
     def __del__(self):
-        logging.info("Application: Done using Application " + self.name + ".")
+        #logging.info("Application: Done using Application " + self.name + ".")
+        pass
 
     # Queries the database for regex(s) and download site(s) then downloads
     # the webpage and checks the regex against it.
     #
     # Incomplete function.
     def checkUpdates(self):
-        logging.info("Checking for updates for " + self.name + ".")
+        #logging.info("Checking for updates for " + self.name + ".")
 
         validURLQuery, urlList = get_app_urls(self.db, self.name)
 
@@ -52,7 +53,7 @@ class app:
             webHtml = f.read()
             f.close()
 
-        validRegxQuery, regexList = get_app_regex(self.db, self.name)
+        validRegxQuery, regexList = get_app_exe_regex(self.db, self.name)
         #self.dl_regex = regexList[0]
         #allReturns = re.findall(self.dl_regex, webHtml, re.IGNORECASE)
 
@@ -70,13 +71,14 @@ class app:
         if validURLQuery:
 
             dlURL = urlList[0]
-            logging.info("Application: Dowloading webpage from: " + dlURL + ".")
+            #logging.info("Application: Dowloading webpage from: " + dlURL + ".")
 
             f = urllib2.urlopen(dlURL)
             webHtml = f.read()
             f.close()
 
-        validRegxQuery, regexList = get_app_regex(self.db, self.name)
+        validRegxQuery, regexList = get_app_exe_regex(self.db, self.name)
+
 
         allReturns = []
         if validRegxQuery:
@@ -88,9 +90,10 @@ class app:
 
         if(len(allReturns) > 0):
 
-            print "Dowloading executable from:", allReturns
+            print "possible executable URL:", allReturns
             dl_url = allReturns[0]
-            dl_url = dl_url[6:len(dl_url) - 1]
+            dl_url = dl_url.replace('"', '')
+            #dl_url = dl_url[6:len(dl_url) - 1]
             print "Dowloading executable from:", dl_url
 
             version = ''
