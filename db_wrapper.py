@@ -174,7 +174,7 @@ def add_update_file(db, appName, versionNum, currEXEFileName = None, localEXELoc
 			return False
 		appList = db.retrieve(1)
 
-	 	if not db.update("Application", ("CurrentVersionNum","Timestamp"), (versionNum, str(time.time())), ("ApplicationName",), (appName,)):
+		if not db.update("Application", ("CurrentVersionNum","Timestamp"), (versionNum, str(time.time())), ("ApplicationName",), (appName,)):
 			db.rollback()
 			return False
 
