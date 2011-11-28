@@ -27,11 +27,12 @@ class db:
 		tableCheck = "SELECT name FROM sqlite_master WHERE name=? AND type='table'"
 		
 		# Tuples with name names and strings of sql queries for table construction
-		tableNames = [("Statistics",),("Application",),("RegExpr",),("Scripts",),("Dependencies",),("Files",),("OldFiles",)]
+		tableNames = [("Statistics",),("Application",),("RegExprExe",),("RegExprVersion",),("Scripts",),("Dependencies",),("Files",),("OldFiles",)]
 
 		tableConstruct = ["CREATE TABLE Statistics(ID INTEGER PRIMARY KEY, NumUpdatesNeeded INTEGER, NumSuccUpdates INTEGER, Date TEXT, Timestamp TEXT)",
 		"CREATE TABLE Application(ID INTEGER PRIMARY KEY, ApplicationName TEXT, CurrentVersionNum TEXT, DownloadURL TEXT, MainURL TEXT, UninstallFirst BOOLEAN, NumOldVersionsToKeep INTEGER, Timestamp TEXT)",
-		"CREATE TABLE RegExpr(ApplicationID INTEGER REFERENCES Application(ID), Expression TEXT)",
+		"CREATE TABLE RegExprExe(ApplicationID INTEGER REFERENCES Application(ID), Expression TEXT)",
+		"CREATE TABLE RegExprVersion(ApplicationID INTEGER REFERENCES Application(ID), Expression TEXT)",
 		"CREATE TABLE Scripts(ID INTEGER PRIMARY KEY, ApplicationID INTEGER REFERENCES Application(ID), Script TEXT)",
 		"CREATE TABLE Dependencies(ID INTEGER PRIMARY KEY, ApplicationID INTEGER REFERENCES Application(ID), Dependency INTEGER REFERENCES Application(ID))",
 		"CREATE TABLE Files(ID INTEGER PRIMARY KEY, ApplicationID INTEGER REFERENCES Application(ID), CurrEXEFileName TEXT, LocalEXELocation TEXT, EXEType TEXT)",

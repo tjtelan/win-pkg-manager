@@ -36,16 +36,16 @@ def add_app(db, appName, version, dlURL, mainURL, uninstallFirst = False, numOld
 		return [False, False]
 
 
-# add_regex
+# add_exe_regex
 # Parameters: db is a database class object
 #							appName is a string 
 #							regex is a list of strings
 # Return: List of bools, first indicates successful db operation, all others
 #           represent if item was able to be inserted (unique)
-def add_regex(db, appName, regex):
+def add_exe_regex(db, appName, regex):
 	fields = ['ApplicationID', 'Expression']
 	insertions = []
-	cont, currAppRegex = get_app_regex(db, appName)
+	cont, currAppRegex = get_app_exe_regex(db, appName)
 	if (not cont):
 		return [False]
 	try:
@@ -53,14 +53,42 @@ def add_regex(db, appName, regex):
 			if re in currAppRegex:
 				insertions.append(False)
 			else:			
-				insertions.append(db.insert('RegExpr', fields, (appName, re)))
+				insertions.append(db.insert('RegExprExe', fields, (appName, re)))
 				currAppRegex.append(re)
 		insertions.insert(0, True)
 		return insertions
 	except:
-		print("An error occurred when inserting the application's regular expression data.")
+		print("An error occurred when inserting the application's regular expression data for exes.")
 		insertions.insert(0, False)
 		return insertions
+
+
+# add_version_regex
+# Parameters: db is a database class object
+#							appName is a string 
+#							regex is a list of strings
+# Return: List of bools, first indicates successful db operation, all others
+#           represent if item was able to be inserted (unique)
+def add_version_regex(db, appName, regex):
+	fields = ['ApplicationID', 'Expression']
+	insertions = []
+	cont, currAppRegex = get_app_version_regex(db, appName)
+	if (not cont):
+		return [False]
+	try:
+		for re in regex:
+			if re in currAppRegex:
+				insertions.append(False)
+			else:			
+				insertions.append(db.insert('RegExprVersion', fields, (appName, re)))
+				currAppRegex.append(re)
+		insertions.insert(0, True)
+		return insertions
+	except:
+		print("An error occurred when inserting the application's regular expression data for exes.")
+		insertions.insert(0, False)
+		return insertions
+
 
 # add_scripts
 # Parameters: db is a database class object
@@ -260,14 +288,14 @@ def get_app_urls(db, appName):
 		return (False, [])
 
 
-# get_app_regex
+# get_app_exe_regex
 # Parameters: db is a database class object
 #							appName is a string
 # Return: Tuple of the form (Bool, List), list contains strings
 #					bool is true if successful, false otherwise
-def get_app_regex(db, appName):
+def get_app_exe_regex(db, appName):
 	try:
-		if db.query("RegExpr", appName, ("Expression",)):
+		if db.query("RegExprExe", appName, ("Expression",)):
 			l = db.retrieve()
 			return (True, list(itertools.chain.from_iterable(l)))
 		else:
@@ -275,6 +303,24 @@ def get_app_regex(db, appName):
 	except:
 		print("An error occurred when retrieving application names from database.")
 		return (False, [])
+
+
+# get_app_version_regex
+# Parameters: db is a database class object
+#							appName is a string
+# Return: Tuple of the form (Bool, List), list contains strings
+#					bool is true if successful, false otherwise
+def get_app_version_regex(db, appName):
+	try:
+		if db.query("RegExprVersion", appName, ("Expression",)):
+			l = db.retrieve()
+			return (True, list(itertools.chain.from_iterable(l)))
+		else:
+			return (False, [])
+	except:
+		print("An error occurred when retrieving application names from database.")
+		return (False, [])
+
 
 # get_app_dependencies
 # Parameters: db is a database class object
@@ -414,15 +460,38 @@ def update_download_url(db, appName, dlURL):
 #							regex is a list of strings
 # Return: List of bools, first indicates successful db operation, all others
 #           represent if item was deleted successfully
-def del_app_regex(db, appName, regex = []):
+def del_app_exe_regex(db, appName, regex = []):
 	fields = ['ApplicationID', 'Expression']
 	deletions = []
 	try:
 		if regex != []:
 			for re in regex:
-				deletions.append(db.delete('RegExpr', fields, (appName, re)))
+				deletions.append(db.delete('RegExprExe', fields, (appName, re)))
 		else:
-			deletions.append(db.delete('RegExpr', [fields[0]], (appName,)))
+			deletions.append(db.delete('RegExprExe', [fields[0]], (appName,)))
+		deletions.insert(0, True)
+		return deletions
+	except:
+		print("An error occurred when deleting the application's regular expression data.")
+		deletions.insert(0, False)
+		return deletions
+
+
+# del_app_version_regex
+# Parameters: db is a database class object
+#							appName is a string 
+#							regex is a list of strings
+# Return: List of bools, first indicates successful db operation, all others
+#           represent if item was deleted successfully
+def del_app_version_regex(db, appName, regex = []):
+	fields = ['ApplicationID', 'Expression']
+	deletions = []
+	try:
+		if regex != []:
+			for re in regex:
+				deletions.append(db.delete('RegExprVersion', fields, (appName, re)))
+		else:
+			deletions.append(db.delete('RegExprVersion', [fields[0]], (appName,)))
 		deletions.insert(0, True)
 		return deletions
 	except:
