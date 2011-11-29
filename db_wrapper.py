@@ -262,7 +262,6 @@ def get_app_version(db, appName):
 	try:
 		if db.query("Application", appName, ("CurrentVersionNum", "Timestamp")):
 			l = db.retrieve()
-			db.update("Application", ("timestamp",), (str(time.time()),), ("ApplicationName",), (appName,))
 			return (True, list(itertools.chain.from_iterable(l)))
 		else:
 			return (False, [])
