@@ -57,12 +57,17 @@ class shell:
 # TODO: overload print function to check for flag.verbose
 class processCmd(argparse.Action):
 
-    # TODO: Get rid of this ugly global
+    # TODO: Get rid of ugly globals
     global mydb
     mydb = wpm_db.db("dbFile", "dbLog")
+    global appLogFileName
+    appLogFileName = "appLog"
 
     def __call__(self, parser, flag, pkg_list, option_string=None):
-        #print("flag: %r \nvalues: %r \noption_string %r" % (namespace, values, option_string))
+
+
+        # Inform user of incomplete program functionality if used
+        self.notImplemented(flag)
 
         # Set custom log file location
         if flag.log_file:
@@ -161,7 +166,8 @@ class processCmd(argparse.Action):
         if flag.keep_going or (result[0] == True) :
             # Get version number
             # Get up-to-date status 
-            print("true")
+            pass
+            #print("true")
         else:
             return False
             # throw error -- pkg not found
@@ -174,15 +180,18 @@ class processCmd(argparse.Action):
             today = date.fromtimestamp(time.time())
 
             # Double check that this compares as expected. Only need to compare days
-            if last_checked < today:
+            if flag.force or last_checked < today:
                 # Check if out of date
                     # download new version if available
                     # set out-of-date
 
                 # wpm_app.checkUpdates
+                prog = app(pkg, mydb, appLogFileName)
+                prog.dlUpdates()
+
 
                 # Download updates if they are available and !(flag.no_execute)
-                if !(flag.no_execute):
+                if not flag.no_execute:
                     pass
                     # wpm_app.dlUpdates
                     # TODO: Does app or shell update the timestamp after checkUpdates? It needs to be done
@@ -210,4 +219,41 @@ class processCmd(argparse.Action):
 #        print("APP: Run uninstall script, if you had to create one with the installer")
 #        print("APP: Respond with error if %s cannot be uninstalled with this tool" % pkg)
 #        print("DB: Remove profile from DB if successfullly removed\n")
+
+    def notImplemented(self, flag):
+
+        ## Options
+        if flag.after_install:
+            print("-A functionality has not yet been defined\n")
+
+        if flag.before_install:
+            print("-B functionality has not yet been defined\n")
+
+        if flag.emit_summaries:
+            print("-e functionality has not yet been defined\n")
+
+        if flag.fetch_only:
+            print("-F functionality has not yet been defined\n")
+
+        if flag.log_file != os.curdir:
+            print("-l functionality has not yet been defined\n")
+
+        if flag.omit_check:
+            print("-O functionality has not yet been defined\n")
+
+        if flag.verbose:
+            print("-v functionality has not yet been defined\n")
+
+        if flag.exclude:
+            print("-x functionality has not yet been defined\n")
+
+        ## Commands
+        if flag.command == "update":
+            print("\"Update\" functionality has not yet been defined")
+
+        if flag.command == "install":
+            print("\"Install\" functionality has not yet been defined")
+
+        if flag.command == "remove":
+            print("\"Remove\" functionality has not yet been defined")
 
