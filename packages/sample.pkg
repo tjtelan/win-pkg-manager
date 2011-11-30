@@ -1,0 +1,15 @@
+# Application name
+# Download URL
+# Main URL
+# Uninstall first for upgrades?
+# # of old versions to keep
+#
+## Regular expressions for scraping web page
+# executable regex
+# version number regex
+#
+# List of dependencies
+#
+# Before install scripts
+#
+# After install scripts
