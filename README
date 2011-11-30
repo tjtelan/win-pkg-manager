@@ -46,7 +46,7 @@ Programmer's Guide:
 
 wpm_db.py -> This file contains the database object and member functions that perform typical operations on a database (i.e. insert, update, etc). The member functions are primarily designed for the builtin database schema but generatlized to the point where the addition of tables may not require modification to the existing functions (this case is not guaranteed). Some of the functions perform specialized operations given a specific table, i.e. when the function update is given the table OldFiles a text insertion is performed to allow for incrementing a counter.
 
-db_wrapper.py -> This file acts as a wedge between the database operations (i.e. queries) and the programmer. The functions it provides are specific to the applications intended use which is package management. 
+db_wrapper.py -> This file acts as a wedge between the database operations (i.e. queries) and the programmer. The functions it provides are specific to the application's intended use which is package management. 
 
 
 -------------------------------------------------------------------------------
