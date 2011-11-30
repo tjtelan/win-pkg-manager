@@ -90,11 +90,11 @@ class app:
 
         if(len(allReturns) > 0):
 
-            print "possible executable URL:", allReturns
+            print("possible executable URL:", allReturns)
             dl_url = allReturns[0]
             dl_url = dl_url.replace('"', '')
             #dl_url = dl_url[6:len(dl_url) - 1]
-            print "Dowloading executable from:", dl_url
+            print("Dowloading executable from:", dl_url)
 
             version = ''
             if validVersionQuery:

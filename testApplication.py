@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python2.7
 import wpm_db, db_wrapper
 from wpm_app import app
 
 mydb = wpm_db.db("dbFile", "dbLog")
 
 # Add vim to the db.
-vim_name = u'vim'
+vim_name = unicode('vim')
 vim_url = "http://www.vim.org"
 vim_dl_url = "http://www.vim.org/download.php"
 vim_version = "1.2.3"
@@ -26,7 +26,7 @@ if validQuery and not vim_name in applications:
 vim = app("vim", mydb, appLogFileName)
 
 vim.checkUpdates()
-vim.dlUpdates()
+#vim.dlUpdates()
 
 
 #vBox = Application("virtual box", "https://www.virtualbox.org/wiki/Downloads", 'href=".*Win.*\.exe"')
