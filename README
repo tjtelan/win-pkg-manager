@@ -15,6 +15,7 @@ Requirements:
 Python 2.7
 sqlite
 urllib2
+git -- (for winsync)
 
 
 Installation:
@@ -22,6 +23,8 @@ Installation:
 Python 2.7 must be installed and include the following packages: sqlite, time, logging, ...
 
 A sqlite database is not required to be setup before starting the application. If one is not setup, the name of the database should be configured. Upon startup of the program, the database will be created and include all necessary tables; if the tables already exist then this will be detected. 
+
+Git must be installed, as that is how the package tree is kept up to date.
 
 [MORE TO COME]
 
