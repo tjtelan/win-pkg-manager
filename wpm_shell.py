@@ -5,6 +5,7 @@ import wpm_db, db_wrapper
 from wpm_app import app
 import time
 from datetime import date
+from datetime import timedelta
 
 
 class shell:
@@ -112,7 +113,7 @@ class processCmd(argparse.Action):
                     pkg_order.insert(pkg_order.index(pkg)+1, deps)
 
         #if flag.verbose:
-        print("Order of execution: %s\n" % pkg_order)
+        #print("Order of execution: %s\n" % pkg_order)
 
 
         # If no packages defined in execution:
@@ -154,49 +155,64 @@ class processCmd(argparse.Action):
 
         if pkg == None:
             # Query for all installed packages
-            result = db_wrapper.get_applications(mydb)
+            prog_list = db_wrapper.get_applications(mydb)
 
-            ## Print results to stdout
-            return True
         else:
             # Query db for requested package
-            result = db_wrapper.get_app_version(mydb, pkg)
+            prog_list = (True, [ pkg ])
 
 
-        if flag.keep_going or (result[0] == True) :
-            # Get version number
-            # Get up-to-date status 
-            pass
-            #print("true")
-        else:
-            return False
-            # throw error -- pkg not found
+        print("\nName" + " Version" + " Out-of-date?\n")
+        print("----" + " -------" + " ------------\n")
+        for p in prog_list[1]:
+            result = db_wrapper.get_app_version(mydb, p)
 
-        # Check if new version has been checked "recently"
-        if (result[0] == True):
+            pkg_current = "Y"
 
-            #print(result[1][1])
-            last_checked = date.fromtimestamp(float(result[1][1]))
-            today = date.fromtimestamp(time.time())
+            if flag.keep_going or (result[0] == True and result[1] != []) :
 
-            # Double check that this compares as expected. Only need to compare days
-            if flag.force or last_checked < today:
-                # Check if out of date
-                    # download new version if available
-                    # set out-of-date
+                if result[1] != []:
+                    pkg_version = result[1][0]
+                else:
+                    pkg_version = "N/A"
+                    pkg_current = "N/A"
 
-                # wpm_app.checkUpdates
-                prog = app(pkg, mydb, appLogFileName)
-                prog.dlUpdates()
+            else:
+                print(pkg + " not found\n")
+                return False
 
 
-                # Download updates if they are available and !(flag.no_execute)
-                if not flag.no_execute:
+            # Check if new version has been checked "recently"
+            # TODO: Define check frequency in settings.py
+            if result[1] != []:
+                last_checked = date.fromtimestamp(float(result[1][1]))
+                today = date.fromtimestamp(time.time())
+
+                # Check for new versions only once a day
+                if flag.force or (today - last_checked ) > timedelta(days=1):
                     pass
-                    # wpm_app.dlUpdates
-                    # TODO: Does app or shell update the timestamp after checkUpdates? It needs to be done
+                    # Check if out of date
+                        # download new version if available
+                        # set out-of-date
+                    # print("More than a day!")
 
-        # print pkg,  version number and up-to-date status
+
+                    # Download updates if they are available and !(flag.no_execute)
+                    if not flag.no_execute:
+                        pass
+                        # wpm_app.checkUpdates
+                        #prog = app(pkg, mydb, appLogFileName)
+                        #prog.dlUpdates()
+
+
+                else:
+                    # If version has been checked already...
+                    pkg_current = "N"
+
+                # if out of date and !(flag.no_execute):
+                    #prog.dlUpdates()
+
+            print(p + " " + pkg_version + " " + pkg_current)
 
     def cmdUpdate(self, pkg, flag):
         pass
@@ -220,6 +236,8 @@ class processCmd(argparse.Action):
 #        print("APP: Respond with error if %s cannot be uninstalled with this tool" % pkg)
 #        print("DB: Remove profile from DB if successfullly removed\n")
 
+
+    # For demo purposes
     def notImplemented(self, flag):
 
         ## Options
