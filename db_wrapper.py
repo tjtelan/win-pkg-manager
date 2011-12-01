@@ -224,13 +224,13 @@ def add_update_file(db, appName, versionNum, currEXEFileName = None, localEXELoc
 def add_stats(db, numUpdatesNeeded, numSuccUpdates):
 	fields = ['NumUpdatesNeeded', 'NumSuccUpdates', 'Timestamp']
 	data = [numUpdatesNeeded, numSuccUpdates, str(time.time())]
-#	try:
-	if not db.insert("Statistics", fields, data):
+	try:
+		if not db.insert("Statistics", fields, data):
+			return False
+		return True
+	except:
+		print("An error occurred when adding statistics into the database.")
 		return False
-	return True
-#	except:
-#		print("An error occurred when adding statistics into the database.")
-#		return False
 
 
 #######################################################################
