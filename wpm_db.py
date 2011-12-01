@@ -333,7 +333,7 @@ class db:
 		c_len = len(colRestrict)
 
 		# OldFile table needs to increment field, so replacement necessary
-		qField = ["UPDATE ", tableName, " SET ", setFields[0], "=OldCount + 1" if (setFields[0] == "OldCount") else "=?"]
+		qField = ["UPDATE ", tableName, " SET ", setFields[0], "=OldCount + 1" if (setToFields[0] == "OldCount + 1") else "=?"]
 		for ix in range(1,s_len):
 			qField.append(",")
 			qField.append(setFields[ix])

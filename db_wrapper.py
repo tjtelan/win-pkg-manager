@@ -449,6 +449,47 @@ def update_download_url(db, appName, dlURL):
 		return False
 
 
+# revert_app
+# Parameters: db is a dabase class object
+#             appName is a string
+#             oldCount is the value associated to an old version to revert to
+#             path is the path to the executable
+#             exeType is the exeType of the file to revert to
+# Return: True if successful, false otherwise
+def revert_app(db, appName, oldCount, path, exeType):
+	try:
+		cont, oldFiles = get_app_oldFiles(db, appName)
+		if not cont:
+			return False
+		
+		oldFiles = sorted(oldFiles, cmp=lambda x,y: cmp(x[-1], y[-1]))
+		db.change_commit(False)
+		
+		if not db.update("Application", ("CurrentVersionNum","Timestamp"), (oldFiles[int(oldCount) - 1][3], str(time.time())), ("ApplicationName",), (appName,)):
+			db.rollback()
+			return False
+		
+		for i in range(int(oldCount)):
+			if not db.delete("OldFiles", ("ApplicationID","OldCount"), (appName,i+1)):
+				db.rollback()
+				return False
+		for i in range(int(oldCount), len(oldFiles)):
+			if not db.update("OldFiles", ("OldCount",), (oldFiles[i][-1] - oldFiles[int(oldCount) - 1][-1],), ("ApplicationID",), (appName,)):
+				db.rollback()
+				return False
+
+		"CREATE TABLE Files(ID INTEGER PRIMARY KEY, ApplicationID INTEGER REFERENCES Application(ID), CurrEXEFileName TEXT, LocalEXELocation TEXT, EXEType TEXT)",
+		if not db.update("Files", ("CurrEXEFileName", "LocalEXELocation", "EXEType"), (oldFiles[int(oldCount) - 1][2], path, exeType), ("ApplicationID",), (appName,)):
+			db.rollback()
+			return False
+		
+		db.change_commit(True)
+		return True
+	except:
+		print("An error occurred when reverting back to an old version in the database.")
+		db.rollback()
+		return False
+
 #######################################################################
 # Delete Functions
 #######################################################################
