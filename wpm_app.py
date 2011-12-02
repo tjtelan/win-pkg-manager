@@ -46,8 +46,11 @@ class app:
 
             if len(allHREFS) > 1:
                 self.href = self.chooseHREF(allHREFS)
-            else:
+            elif allHREFS != []:
                 self.href = allHREFS[0]
+            else:
+                print 'Found no hyperlinks in webpage.'
+
 
 
             newVersion = self.getVersionFromURL(self.href)
@@ -86,7 +89,7 @@ class app:
 
             if(self.href != ''):
                 # assume that there is no quotes are found in hyperlink.
-                if self.version != '':
+                if self.version == '':
                     self.version = self.getVersionFromURL(self.href)
 
 
@@ -99,12 +102,13 @@ class app:
                 print "Application: Dowloading executable from: %s to %s" % (self.href, self.downloadFileName)
                 add_update_file(self.db, self.name, self.version, self.downloadFileName)
                 self.href = self.href.replace('"', '')
-                req = urllib2.urlopen(self.href)
-                output = open(self.downloadFileName, 'wb')
-                output.write(req.read())
-                output.close()
-
-
+                try:
+                    req = urllib2.urlopen(self.href)
+                    output = open(self.downloadFileName, 'wb')
+                    output.write(req.read())
+                    output.close()
+                except:
+                    print 'Download href failed'
 
 
     # Choose a hyperlink.
@@ -168,6 +172,9 @@ class app:
             self.version = version
             return version
 
+        print 'found no version in hyperlink.'
+        return ''
+
 
     def getExeURLs(self):
         allReturns = []
@@ -183,10 +190,16 @@ class app:
             dlURL = urlList[1]
 
             logging.info( 'Application: Downloading webpage from ' + dlURL)
+            if(str(dlURL[0]) != '.'):
+                try:
+                    f = urllib2.urlopen(str(dlURL))
+                    webHtml = f.read()
+                    f.close()
+                except:
+                    print 'Error downloading hyperlink.'
+            else:
+                print 'Invalid download url:' + dlURL
 
-            f = urllib2.urlopen(str(dlURL))
-            webHtml = f.read()
-            f.close()
 
             validRegxQuery, regexList = get_app_exe_regex(self.db, self.name)
 
@@ -202,10 +215,13 @@ class app:
 
 
                     # Try the other urls.
-                    f = urllib2.urlopen(otherDlUrl)
                     webHtml = ''
-                    webHtml = f.read()
-                    f.close()
+                    try:
+                        f = urllib2.urlopen(otherDlUrl)
+                        webHtml = f.read()
+                        f.close()
+                    except:
+                        print 'Error downloading webpage.'
 
                     # Apply regex again.
                     others = []
