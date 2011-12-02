@@ -89,10 +89,20 @@ class app:
                 if self.version != '':
                     self.version = self.getVersionFromURL(self.href)
 
-                    req = urllib2.urlopen(self.href)
-                    output = open(self.name + self.version + '.exe', 'wb')
-                    output.write(req.read())
-                    output.close()
+
+                if self.version == '':
+                    self.downloadFileName = self.name + '.' + self.version + '.exe'
+                else:
+                    self.downloadFileName = self.name + '.exe'
+
+                req = urllib2.urlopen(self.href)
+                output = open(self.downloadFileName, 'wb')
+                output.write(req.read())
+                output.close()
+
+
+                add_update_file(self.db, self.name, self.downloadFileName, self.version)
+
 
 
     # Choose a hyperlink.
@@ -140,15 +150,14 @@ class app:
 
             # trivial case.
             elif(len(versions) == 1):
-                version = '.' + versions[0]
+                version = versions[0]
 
             if(version != ''):
-                print 'Found version in hyperlink: ' + version[1:]
+                print 'Found version in hyperlink: ' + version
 
             # Found nothing.
             else:
                 print 'Version regex found no version information in Hypelink.'
-
 
             self.version = version
             return version
