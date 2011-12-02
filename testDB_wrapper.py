@@ -36,7 +36,7 @@ print("Get Version Regex", db_wrapper.get_app_version_regex(mydb, "App"))
 print("Delete Version Regex", db_wrapper.del_app_version_regex(mydb, "App", ["[a,b]"]))
 print("Get Version Regex - After Deletions", db_wrapper.get_app_version_regex(mydb, "App"))
 print("Add EXE Regex", db_wrapper.add_exe_regex(mydb, "App", ["[4,2]", "[1-3]"]))
-print("Get EXE Regex", db_wrapper.get_app_exe_regex(mydb, "App"))
+print("Get Scripts", db_wrapper.get_app_scripts(mydb, "latestApp"))
 print("Delete EXE Regex", db_wrapper.del_app_exe_regex(mydb, "App"))
 print("Get EXE Regex - After Deletions", db_wrapper.get_app_exe_regex(mydb, "App"))
 print("Add Scripts", db_wrapper.add_scripts(mydb, "latestApp", ["scr1", "scr2", "scr1"]))
@@ -63,6 +63,21 @@ print("Revert", db_wrapper.revert_app(mydb, "latestApp", 2, "installers/", "zip"
 print("Get Current File - After Revert", db_wrapper.get_app_currFile(mydb, "latestApp"))
 print("Get Old Files - After After Revert", db_wrapper.get_app_oldFiles(mydb, "latestApp"))
 print("Get Version Test - After Revert", db_wrapper.get_app_version(mydb, "latestApp"))
+
+# Delete an application
+print("\nDelete an application")
+print("Add Version Regex", db_wrapper.add_version_regex(mydb, "App", ["[a,b]", "[c-f]"]))
+print("Add Scripts", db_wrapper.add_scripts(mydb, "latestApp", ["scr1", "scr2", "scr1"]))
+print("Add EXE Regex", db_wrapper.add_exe_regex(mydb, "App", ["[4,2]", "[1-3]"]))
+print("Delete Test", db_wrapper.del_entire_app(mydb, "latestApp"))
+print("Get Scripts", db_wrapper.get_app_scripts(mydb, "latestApp"))
+print("Get EXE Regex", db_wrapper.get_app_exe_regex(mydb, "latestApp"))
+print("Get Version Regex", db_wrapper.get_app_version_regex(mydb, "latestApp"))
+print("Get Version Test", db_wrapper.get_app_version(mydb, "latestApp"))
+print("Get URLs Test", db_wrapper.get_app_urls(mydb, "latestApp"))
+print("Get Current File", db_wrapper.get_app_currFile(mydb, "latestApp"))
+print("Get Old Files", db_wrapper.get_app_oldFiles(mydb, "latestApp"))
+
 
 # Test Operations on Stats Table
 print("\nTest Operations on Stats Table")

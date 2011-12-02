@@ -494,6 +494,27 @@ def revert_app(db, appName, oldCount, path, exeType):
 # Delete Functions
 #######################################################################
 
+# del_entire_app
+# Parameters: db is a database class object
+#							appName is a string
+# Return: True if successful, false otherwise
+def del_entire_app(db, appName):
+	tables = [("OldFiles", "ApplicationID"), ("Files", "ApplicationID"), ("Dependencies", "ApplicationID"), \
+						("Scripts", "ApplicationID"), ("RegExprExe", "ApplicationID"),("RegExprVersion", "ApplicationID"), ("Application", "ApplicationName")]
+	try:
+		db.change_commit(False)
+		for tab in tables:
+			if not db.delete(tab[0], (tab[1],), (appName,)):
+				db.rollback()
+				return False
+		db.change_commit(True)
+		return True
+	except:
+		print("An error occurred when deleting the application from the database.")
+		db.rollback()
+		return False		
+
+
 # del_app_regex
 # Parameters: db is a database class object
 #							appName is a string 
