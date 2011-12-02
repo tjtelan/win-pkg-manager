@@ -197,8 +197,12 @@ class processCmd(argparse.Action):
 
                     # Download updates if they are available and !(flag.no_execute)
                     if not flag.no_execute:
-                        prog = app(pkg, mydb, appLogFileName)
-#                        print(prog.getExeURLs())
+                        prog = app(p, mydb, appLogFileName)
+                        if prog.checkUpdates():
+                            pkg_current = "Y"
+                        else:
+                            pkg_current = "N"
+                        #print(prog.getExeURLs())
                         #prog.dlUpdates()
 
 
@@ -219,7 +223,8 @@ class processCmd(argparse.Action):
     # Takes in a list of packages and downloads new packages and updates the old packages
     # Updates the version references in the database 
     def cmdUpdate(self, pkg, flag):
-        return
+
+
 
         if pkg == None:
             # Query for all installed packages
@@ -229,20 +234,99 @@ class processCmd(argparse.Action):
             # Query db for requested package
             prog_list = (True,  pkg )
             #print(prog_list[1])
+
+        print("Checking for updates")
         for p in prog_list[1]:
-            pass
+            print(p + ":")
+            result = db_wrapper.get_app_version(mydb, p)
 
-            # Check for new versions only once a day
-            if flag.force or (today - last_checked ) > timedelta(days=1):
-                pass
-                # Check if out of date
-                    # download new version if available
-                    # set out-of-date
 
-                # Download updates if they are available and !(flag.no_execute)
+            if flag.keep_going or (result[0] == True and result[1] != []) :
+
+                if result[1] != []:
+                    pkg_version = result[1][0]
+                else:
+                    pkg_version = "N/A"
+                    pkg_current = "Not found"
+
+            else:
+                print("{0:15s} {1:10s} {2:10s}").format(p, "N/A", "Not found")
+                continue
+
+
+            # Check if new version has been checked "recently"
+            # TODO: Define check frequency in settings.py
+            if result[1] != []:
+                last_checked = date.fromtimestamp(float(result[1][1]))
+                today = date.fromtimestamp(time.time())
+
+                # Check for new versions only once a day
+#                if flag.force or (today - last_checked ) > timedelta(days=1):
+#                    pass
+                    # Check if out of date
+                        # download new version if available
+                        # set out-of-date
+
+                    # Download updates if they are available and !(flag.no_execute)
                 if not flag.no_execute:
-                    prog = app(pkg, mydb, appLogFileName)
+                    prog = app(p, mydb, appLogFileName)
+                    if prog.checkUpdates():
+                        prog.dlUpdates()
+
+
+#               else:
+                    # If version has been checked already...
+#                    pkg_current = "N"
+
+                # if out of date and !(flag.no_execute):
                     #prog.dlUpdates()
+
+            # Display installed packages, version and up to date status
+#            print("{0:15s} {1:10s} {2:10s}").format(p, pkg_version, pkg_current)
+
+#        print("")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#        if pkg == None:
+#            # Query for all installed packages
+#            prog_list = db_wrapper.get_applications(mydb)
+#
+#        else:
+#            # Query db for requested package
+#            prog_list = (True,  pkg )
+#            #print(prog_list[1])
+#        for p in prog_list[1]:
+#                last_checked = date.fromtimestamp(float(result[1][1]))
+#                today = date.fromtimestamp(time.time())
+#
+#
+#            # Check for new versions only once a day
+#            if flag.force or (today - last_checked ) > timedelta(days=1):
+#                pass
+#                # Check if out of date
+#                    # download new version if available
+#                    # set out-of-date
+#
+#                # Download updates if they are available and !(flag.no_execute)
+#                if not flag.no_execute:
+#                    prog = app(p, mydb, appLogFileName)
+#                    if prog.checkUpdates():
+#                        prog.dlUpdates()
 
             # if out of date and !(flag.no_execute):
                 #prog.dlUpdates()
@@ -289,8 +373,8 @@ class processCmd(argparse.Action):
             print("-x functionality has not yet been implemented")
 
         ## Commands
-        if flag.command == "update":
-            print("\"Update\" functionality has not yet been implemented")
+#        if flag.command == "update":
+#            print("\"Update\" functionality has not yet been implemented")
 
         if flag.command == "install":
             print("\"Install\" functionality has not yet been implemented")
