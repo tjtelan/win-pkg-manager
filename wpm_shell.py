@@ -93,27 +93,27 @@ class processCmd(argparse.Action):
             # Check on the status of dependencies of `pkg"
             if flag.recursive:
                 test_depends = ["dep1", "dep2", "dep3"]
-                print("Query for dependencies of %s" % pkg)
+                print("DEMO: Query for dependencies of %s" % pkg)
 
                 # TODO: Use data from db queries
                 # append to execution list
                 for deps in test_depends:
-                    print("Adding %s as a dependency to %s" % (deps, pkg))
+                    print("DEMO: Adding %s as a dependency to %s" % (deps, pkg))
                     pkg_order.insert(pkg_order.index(pkg)+1, deps)
 
             # Check on the status of programs that depend on `pkg"
             if flag.upward_recursive:
                 test_updepends = ["Udep1", "Udep2", "Udep3"]
-                print("Query for programs which have %s as a dependency" % pkg)
+                print("DEMO: Query for programs which have %s as a dependency" % pkg)
 
                 # TODO: Use data from db queries
                 # append to execution list
                 for deps in test_updepends:
-                    print("Adding %s as a dependency to %s" % (deps, pkg))
+                    print("DEMO: Adding %s as a dependency to %s" % (deps, pkg))
                     pkg_order.insert(pkg_order.index(pkg)+1, deps)
 
         #if flag.verbose:
-        #print("Order of execution: %s\n" % pkg_order)
+        #print("Order of execution: %s\n" % pkg_order[::-1])
 
 
         # If no packages defined in execution:
@@ -130,26 +130,26 @@ class processCmd(argparse.Action):
             else:
                 self.cmdUpdate(None, flag)
         else:
-            for pkg in reversed(pkg_order):
 
-                #if flag.verbose:
-#                print("Performing %s on %s" % (flag.command, pkg))
-#                print("Query for %s in db" % pkg)
+            #if flag.verbose:
+#            print("Performing %s on %s" % (flag.command, pkg))
+#            print("Query for %s in db" % pkg)
 #
-#                print("DB: Query for version info for %s" % pkg)
-#                print("DB: Check if %s has been checked for \'out-of-date-ness\' recently" % pkg)
-#                print("APP: Check for current version if needed\n")
+#            print("DB: Query for version info for %s" % pkg)
+#            print("DB: Check if %s has been checked for \'out-of-date-ness\' recently" % pkg)
+#            print("APP: Check for current version if needed\n")
 
-                if (flag.command == "info"):
-                    self.cmdInfo(pkg, flag)
-                elif (flag.command == "update"):
-                    self.cmdUpdate(pkg, flag)
-                elif (flag.command == "install"):
-                    self.cmdInstall(pkg, flag)
-                elif (flag.command == "remove"):
-                    self.cmdRemove(pkg, flag)
-                else:
-                    print("Problem. Shouldn\'t ever make it here\n")
+            # Pass in pkg_order in reverse to preseve execution order
+            if (flag.command == "info"):
+                self.cmdInfo(pkg_order[::-1], flag)
+            elif (flag.command == "update"):
+                self.cmdUpdate(pkg_order[::1], flag)
+            elif (flag.command == "install"):
+                self.cmdInstall(pkg_order[::1], flag)
+            elif (flag.command == "remove"):
+                self.cmdRemove(pkg_order[::1], flag)
+            else:
+                print("Problem. Shouldn\'t ever make it here\n")
 
     def cmdInfo(self, pkg, flag):
 
@@ -159,11 +159,13 @@ class processCmd(argparse.Action):
 
         else:
             # Query db for requested package
-            prog_list = (True, [ pkg ])
+            prog_list = (True,  pkg )
+            #print(prog_list[1])
 
-
-        print("\nName" + " Version" + " Out-of-date?\n")
-        print("----" + " -------" + " ------------\n")
+        # Print header to the package table
+        print("")
+        print("{0:10s} {1:10s} {2:10s}").format("Name", "Version", "Up-to-date?")
+        print("{0:10s} {1:10s} {2:10s}").format("----", "-------", "-----------")
         for p in prog_list[1]:
             result = db_wrapper.get_app_version(mydb, p)
 
@@ -178,8 +180,8 @@ class processCmd(argparse.Action):
                     pkg_current = "N/A"
 
             else:
-                print(pkg + " not found\n")
-                return False
+                print(p + " not found")
+                continue
 
 
             # Check if new version has been checked "recently"
@@ -194,8 +196,6 @@ class processCmd(argparse.Action):
                     # Check if out of date
                         # download new version if available
                         # set out-of-date
-                    # print("More than a day!")
-
 
                     # Download updates if they are available and !(flag.no_execute)
                     if not flag.no_execute:
@@ -212,7 +212,10 @@ class processCmd(argparse.Action):
                 # if out of date and !(flag.no_execute):
                     #prog.dlUpdates()
 
-            print(p + " " + pkg_version + " " + pkg_current)
+            # Display installed packages, version and up to date status
+            print("{0:10s} {1:10s} {2:10s}").format(p, pkg_version, pkg_current)
+
+        print("")
 
     def cmdUpdate(self, pkg, flag):
         pass
