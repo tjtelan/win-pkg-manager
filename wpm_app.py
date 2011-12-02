@@ -32,12 +32,17 @@ class app:
         #logging.info("Application: Done using Application " + self.name + ".")
         pass
 
+
+
+
+
     # Queries the database for regex(s) and download site(s) then downloads
     # the webpage and checks the regex against it.
     #
-    # Incomplete function.
+    # Returns Boolean
     def checkUpdates(self):
         #logging.info("Checking for updates for " + self.name + ".")
+
 
         validURLQuery, urlList = get_app_urls(self.db, self.name)
 
@@ -48,11 +53,11 @@ class app:
 
             dlURL = urlList[0]
 
-
             f = urllib2.urlopen(str(dlURL))
             webHtml = f.read()
             f.close()
 
+        # Get the url
         validRegxQuery, regexList = get_app_exe_regex(self.db, self.name)
         #self.dl_regex = regexList[0]
         #allReturns = re.findall(self.dl_regex, webHtml, re.IGNORECASE)
@@ -60,13 +65,18 @@ class app:
         # Pull the version number out of the executable or out of the
         # webpage.
 
+        return False
+
 
     # Download the updates - check for updates first.
     # Not complete (obviously)
     def dlUpdates(self):
+        print "Application: Updating " + self.name
 
         validURLQuery, urlList = get_app_urls(self.db, self.name)
         webHtml = ''
+
+        print urlList
 
         if validURLQuery:
 
@@ -81,7 +91,7 @@ class app:
 
 
         allReturns = []
-        if validRegxQuery:
+        if validRegxQuery and len(regexList) > 0:
             dl_regex = regexList[0]
             allReturns = re.findall(dl_regex, webHtml, re.IGNORECASE)
 
@@ -100,7 +110,6 @@ class app:
             if validVersionQuery:
                 version = '.' + versionList[0]
 
-
             req = urllib2.urlopen(dl_url)
             output = open(self.name + version + '.exe', 'wb')
             output.write(req.read())
@@ -108,13 +117,52 @@ class app:
 
 
 
+    def getExeURLs(self):
+        allReturns = []
+        #print 'urllist = ', urlList
 
-    # initialize without use of the database.
-    #def __init__(self, name, downLoadSite, dl_regex):
-    #    # Parameters: Database object
-    #    # log file (in append mode)
-    ##def __init__(self, downLoadSite, dl_regex):
-    #    self.dlSite = downLoadSite
-    #    self.dl_regex = dl_regex
-    #    self.name = name
-    #    self.dl_url = ''
+
+        # Get the list of urls from the database.
+        validURLQuery, urlList = get_app_urls(self.db, self.name)
+        if validURLQuery and urlList != []:
+            webHtml = ''
+
+            # assume that the download url is  first in list.
+            dlURL = urlList[1]
+
+            print 'Application: Downloading webpage from ' + dlURL
+
+            f = urllib2.urlopen(str(dlURL))
+            webHtml = f.read()
+            f.close()
+
+            validRegxQuery, regexList = get_app_exe_regex(self.db, self.name)
+
+            #print 'regex list = ', regexList
+
+            if validRegxQuery and len(regexList) > 0:
+                for app_regex in regexList:
+                    allReturns = allReturns + re.findall(app_regex, webHtml, re.IGNORECASE)
+
+                if allReturns == []:
+                    print 'Application: No returns, possibly download url is wrong. Checking other URL.'
+
+                    dlUrl = urlList[0]
+
+
+                    # Try the other urls.
+                    f = urllib2.urlopen(dlURL)
+                    webHtml = f.read()
+                    f.close()
+
+                    # Apply regex again.
+                    for app_regex in regexList:
+                        others = re.findall(app_regex, webHtml, re.IGNORECASE)
+
+                    print otherReturns
+                    useOthers = raw_input('Use other returns? [y/n]')
+                    if useOthers == 'y':
+                        allReturns = others
+
+
+        return allReturns

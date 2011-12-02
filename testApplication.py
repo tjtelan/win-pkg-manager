@@ -16,16 +16,19 @@ vim_version_regex = '\d+.*\d'
 appLogFileName = "appLog"
 
 validQuery, applications = db_wrapper.get_applications(mydb)
+
+print applications
 if validQuery and not vim_name in applications:
-    db_wrapper.add_app(mydb, vim_name, vim_version, vim_url, vim_dl_url)
+    db_wrapper.add_app(mydb, vim_name, vim_version, vim_dl_url, vim_url)
     db_wrapper.add_exe_regex(mydb, vim_name, [vim_regex])
     db_wrapper.add_version_regex(mydb, vim_name, [vim_regex])
 
 #db_wrapper.add_version_regex(mydb, vim_name, [])
 
 vim = app("vim", mydb, appLogFileName)
+print vim.getExeURLs()
 
-vim.checkUpdates()
+#vim.checkUpdates()
 #vim.dlUpdates()
 
 
