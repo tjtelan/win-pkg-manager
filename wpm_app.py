@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 ########################################################################
 # Group: Windows Package Manager A
 # Name: Sebastian Imlay
@@ -26,11 +24,11 @@ class app:
         self.href = ''
         self.version = ''
 
-        logging.info("Application: Initialized application using database for " + appName + ".")
+#logging.info("Application: Initialized application using database for " + appName + ".")
 
     # abritrary delete function.
     def __del__(self):
-        logging.info("Application: Done using Application " + self.name + ".")
+#logging.info("Application: Done using Application " + self.name + ".")
         pass
 
 
@@ -40,7 +38,7 @@ class app:
     # Returns Boolean True means there is an newer version,
     #  false means no newer version found.
     def checkUpdates(self):
-        logging.info("Checking for updates for " + self.name + ".")
+#logging.info("Checking for updates for " + self.name + ".")
 
 
         newVersion = ''

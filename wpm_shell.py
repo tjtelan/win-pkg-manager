@@ -198,6 +198,7 @@ class processCmd(argparse.Action):
                     # Download updates if they are available and !(flag.no_execute)
                     if not flag.no_execute:
                         prog = app(pkg, mydb, appLogFileName)
+#                        print(prog.getExeURLs())
                         #prog.dlUpdates()
 
 

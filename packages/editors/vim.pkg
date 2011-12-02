@@ -1,11 +1,11 @@
 # Application name
-[ "" ]
+[ "vim" ]
 
 # Download URL
-[ "" ]
+[ "http://www.vim.org/download.php" ]
 
 # Main URL
-[ "" ]
+[ "http://www.vim.org" ]
 
 # Uninstall first for upgrades?
 False
@@ -15,10 +15,10 @@ False
 
 ## Regular expressions for scraping web page
 # executable regex
-[ "" ]
+[ '".*vim.*\.exe"' ]
 
 # version number regex
-[ "" ]
+[ '\d+.*\d' ]
 
 # List of dependencies
 []
