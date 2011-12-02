@@ -18,7 +18,7 @@ class app:
         self.logger = logging.getLogger('Application')
         self.logger.setLevel(logging.DEBUG)
 
-        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%a, %d %b %Y %H:%M:%S', filename=logFileName, filemode='a')
+        #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%a, %d %b %Y %H:%M:%S', filename=logFileName, filemode='a')
         self.name = appName
         self.db = dbObject
         self.href = ''
@@ -40,7 +40,6 @@ class app:
     def checkUpdates(self):
 #logging.info("Checking for updates for " + self.name + ".")
 
-
         newVersion = ''
         if self.href == '':
             allHREFS = self.getExeURLs()
@@ -60,7 +59,6 @@ class app:
                 # Found this version in the db.
                 if str(currVersion) == newVersion:
                     return False
-
         # Did not find this version in the db.
         return True
 
@@ -82,25 +80,25 @@ class app:
 
                 # Only one hyperlink in html.
                 elif(len(allHREFS) == 1):
-                    href = allHREFS[0]
+                    href = allHREFS[0].replace('"', '')
 
-                self.href = href
+                self.href = href.replace('"', '')
 
             if(self.href != ''):
                 # assume that there is no quotes are found in hyperlink.
-                logging.info( "Application: Dowloading executable from:", self.href)
                 if self.version != '':
                     self.version = self.getVersionFromURL(self.href)
 
 
-                if self.version == '':
-                    self.downloadFileName = self.name + '.' + self.version + '.exe'
-                else:
-                    self.downloadFileName = self.name + '.exe'
+                #if self.version == '':
+                #    self.downloadFileName = self.name + self.version + '.exe'
+                #else:
+                #    self.downloadFileName = self.name + '.exe'
 
-
+                self.downloadFileName = self.name + self.version + '.exe'
+                print "Application: Dowloading executable from: %s to %s" % (self.href, self.downloadFileName)
                 add_update_file(self.db, self.name, self.version, self.downloadFileName)
-
+                self.href = self.href.replace('"', '')
                 req = urllib2.urlopen(self.href)
                 output = open(self.downloadFileName, 'wb')
                 output.write(req.read())
@@ -124,6 +122,7 @@ class app:
             href = allHREFS[int(hrefNum)]
 
         href = href.replace('"', '')
+
         return href
 
 
