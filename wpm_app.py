@@ -23,7 +23,8 @@ class app:
         #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%a, %d %b %Y %H:%M:%S', filename=logFileName, filemode='a')
         self.name = appName
         self.db = dbObject
-        self.dlUrl = ''
+        self.href = ''
+        self.version = ''
 
         #logging.info("Application: Initialized application using database for " + appName + ".")
 
@@ -36,67 +37,62 @@ class app:
     # Queries the database for regex(s) and download site(s) then downloads
     # the webpage and checks the regex against it.
     #
-    # Returns Boolean
+    # Returns Boolean True means there is an newer version,
+    #  false means no newer version found.
     def checkUpdates(self):
         #logging.info("Checking for updates for " + self.name + ".")
 
-        allHREFS = self.getExeURLs()
+        newVersion = ''
+        if self.href == '':
+            allHREFS = self.getExeURLs()
+            self.href = self.chooseHREF(allHREFS)
 
-        allHREFS = self.getExeURLs()
-        if allHREFS == []:
-            print 'Found no hyper links using that regular expression.'
-
-        # More than one hyperlink.  Prompt user.
-        elif(len(allHREFS) > 1):
-            href = self.chooseHREF(allHREFS)
-
-        # Only one hyperlink in html.
-        elif(len(allHREFS) == 1):
-            href = allHREFS[0]
-
-        newVersion = self.getVersionFromURL(href)
+            newVersion = self.getVersionFromURL(self.href)
 
         validQuery, versionsInDB =  get_app_version(self.db, self.name)
         if validQuery:
             for currVersion in versionsInDB:
 
                 # Found this version in the db.
-                if currVersion == newVersion:
-                    return True
+                if str(currVersion) == newVersion:
+                    return False
 
         # Did not find this version in the db.
-        return False
+        return True
 
 
     # Download the updates - check for updates first.
-    # Not complete (obviously)
     def dlUpdates(self):
-        print "Application: Updating " + self.name
 
-        href = ''
+        if self.checkUpdates():
+            print "Application: Updating " + self.name
 
-        allHREFS = self.getExeURLs()
-        if allHREFS == []:
-            print 'Found no hyper links using that regular expression.'
+            if self.href == '':
+                allHREFS = self.getExeURLs()
+                href = ''
+                if allHREFS == []:
+                    print 'Found no hyper links using that regular expression.'
 
-        # More than one hyperlink.  Prompt user.
-        elif(len(allHREFS) > 1):
-            href = self.chooseHREF(allHREFS)
+                # More than one hyperlink.  Prompt user.
+                elif(len(allHREFS) > 1):
+                    href = self.chooseHREF(allHREFS)
 
-        # Only one hyperlink in html.
-        elif(len(allHREFS) == 1):
-            href = allHREFS[0]
+                # Only one hyperlink in html.
+                elif(len(allHREFS) == 1):
+                    href = allHREFS[0]
 
-        if(href != ''):
-            # assume that there is no quotes are found in hyperlink.
-            print "Dowloading executable from:", href
+                self.href = href
 
-            version = self.getVersionFromURL(href)
+            if(self.href != ''):
+                # assume that there is no quotes are found in hyperlink.
+                print "Dowloading executable from:", self.href
+                if self.version != '':
+                    self.version = self.getVersionFromURL(self.href)
 
-            req = urllib2.urlopen(href)
-            output = open(self.name + version + '.exe', 'wb')
-            output.write(req.read())
-            output.close()
+                    req = urllib2.urlopen(self.href)
+                    output = open(self.name + self.version + '.exe', 'wb')
+                    output.write(req.read())
+                    output.close()
 
 
     # Choose a hyperlink.
@@ -122,11 +118,11 @@ class app:
         # apply version regex to the (possibly chosen) url.
         if validVersionRegexQuery and versionRegexList != []:
             versions = []
+            version = ''
 
             # Get the version from the regex list.
             for regex in versionRegexList:
                 versions = versions + re.findall(regex, href, re.IGNORECASE)
-                print versions
 
             # Found with more than one. Prompt the user.
             if (len(versions) > 1):
@@ -154,6 +150,7 @@ class app:
                 print 'Version regex found no version information in Hypelink.'
 
 
+            self.version = version
             return version
 
 
