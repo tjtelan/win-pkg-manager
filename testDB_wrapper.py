@@ -48,7 +48,10 @@ print("Add Scripts - Post(Names span pre/post)", db_wrapper.add_scripts(mydb, "l
 print("Get Scripts - Pre", db_wrapper.get_app_scripts(mydb, "latestApp"))
 print("Get Scripts - Post", db_wrapper.get_app_scripts(mydb, "latestApp", False))
 print("Get Scripts - Empty", db_wrapper.get_app_scripts(mydb, "App"))
-print("Delete Scripts - Pre", db_wrapper.del_app_scripts(mydb, "latestApp", ["scr2"]))
+print("Delete Scripts - Pre", db_wrapper.del_app_scripts(mydb, "latestApp", ["scr2pre"]))
+print("Get Scripts - After Deletion (Pre)", db_wrapper.get_app_scripts(mydb, "latestApp"))
+print("Get Scripts - After Deletion (Post)", db_wrapper.get_app_scripts(mydb, "latestApp", False))
+print("Delete Scripts - Post", db_wrapper.del_app_scripts(mydb, "latestApp", ["scr1post"], False))
 print("Get Scripts - After Deletion (Pre)", db_wrapper.get_app_scripts(mydb, "latestApp"))
 print("Get Scripts - After Deletion (Post)", db_wrapper.get_app_scripts(mydb, "latestApp", False))
 

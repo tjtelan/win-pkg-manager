@@ -572,17 +572,19 @@ def del_app_version_regex(db, appName, regex = []):
 # Parameters: db is a database class object
 #							appName is a string
 #							scriptName is a list of strings
+#							pre is True if scripts are pre-install, false if post-install
 # Return: List of bools, first indicates successful db operation, all others
 #           represent if item was deleted successfully
-def del_app_scripts(db, appName, scriptNames = []):
-	fields = ['ApplicationID', 'Script']
+def del_app_scripts(db, appName, scriptNames = [], pre = True):
+	fields = ['ApplicationID', 'Script', 'IsPre']
 	deletions = []
+	preVal = (1 if pre == True else 0)
 	try:
 		if scriptNames != []:
 			for script in scriptNames:
-				deletions.append(db.delete('Scripts', fields, (appName, script)))
+				deletions.append(db.delete('Scripts', fields, (appName, script, preVal)))
 		else:
-			deletions.append(db.delete('Scripts', [fields[0]], (appName,)))
+			deletions.append(db.delete('Scripts', [fields[0], fields[2]], (appName, preVal)))
 		deletions.insert(0, True)
 		return deletions
 	except:
