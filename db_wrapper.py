@@ -43,7 +43,7 @@ def add_app(db, appName, version, dlURL, mainURL, uninstallFirst = False, numOld
 # Return: List of bools, first indicates successful db operation, all others
 #           represent if item was able to be inserted (unique)
 def add_exe_regex(db, appName, regex):
-	fields = ['ApplicationID', 'Expression']
+	fields = ['ApplicationID', 'Expression', "IsVersion"]
 	insertions = []
 	cont, currAppRegex = get_app_exe_regex(db, appName)
 	if (not cont):
@@ -53,7 +53,7 @@ def add_exe_regex(db, appName, regex):
 			if re in currAppRegex:
 				insertions.append(False)
 			else:			
-				insertions.append(db.insert('RegExprExe', fields, (appName, re)))
+				insertions.append(db.insert('RegExpr', fields, (appName, re, 0)))
 				currAppRegex.append(re)
 		insertions.insert(0, True)
 		return insertions
@@ -70,7 +70,7 @@ def add_exe_regex(db, appName, regex):
 # Return: List of bools, first indicates successful db operation, all others
 #           represent if item was able to be inserted (unique)
 def add_version_regex(db, appName, regex):
-	fields = ['ApplicationID', 'Expression']
+	fields = ['ApplicationID', 'Expression', "IsVersion"]
 	insertions = []
 	cont, currAppRegex = get_app_version_regex(db, appName)
 	if (not cont):
@@ -80,7 +80,7 @@ def add_version_regex(db, appName, regex):
 			if re in currAppRegex:
 				insertions.append(False)
 			else:			
-				insertions.append(db.insert('RegExprVersion', fields, (appName, re)))
+				insertions.append(db.insert('RegExpr', fields, (appName, re, 1)))
 				currAppRegex.append(re)
 		insertions.insert(0, True)
 		return insertions
@@ -98,15 +98,11 @@ def add_version_regex(db, appName, regex):
 # Return: List of bools, first indicates successful db operation, all others
 #           represent if item was able to be inserted (unique)
 def add_scripts(db, appName, scriptNames, pre = True):
-	fields = ['ApplicationID', 'Script', 'Pre']
+	fields = ['ApplicationID', 'Script', 'IsPre']
 	insertions = []
-	cont, currAppScripts = get_app_scripts(db, appName, True)
+	cont, currAppScripts = get_app_scripts(db, appName, pre)
 	if (not cont):
 		return [False]
-	cont, moreAppScripts = get_app_scripts(db, appName, False)
-	if (not cont):
-		return [False]
-	currAppScripts.extend(moreAppScripts)
 	preVal = (1 if pre == True else 0)
 	try:
 		for script in scriptNames:
@@ -300,9 +296,10 @@ def get_app_urls(db, appName):
 #					bool is true if successful, false otherwise
 def get_app_exe_regex(db, appName):
 	try:
-		if db.query("RegExprExe", appName, ("Expression",)):
+		if db.query("RegExpr", appName, ("Expression", "IsVersion")):
 			l = db.retrieve()
-			return (True, list(itertools.chain.from_iterable(l)))
+			l = [item[0] for item in l if item[1] == 0]
+			return (True, l)
 		else:
 			return (False, [])
 	except:
@@ -317,9 +314,10 @@ def get_app_exe_regex(db, appName):
 #					bool is true if successful, false otherwise
 def get_app_version_regex(db, appName):
 	try:
-		if db.query("RegExprVersion", appName, ("Expression",)):
+		if db.query("RegExpr", appName, ("Expression", "IsVersion")):
 			l = db.retrieve()
-			return (True, list(itertools.chain.from_iterable(l)))
+			l = [item[0] for item in l if item[1] == 1]
+			return (True, l)
 		else:
 			return (False, [])
 	except:
@@ -351,7 +349,7 @@ def get_app_dependencies(db, appName):
 #					bool is true if successful, false otherwise
 def get_app_scripts(db, appName, pre = True):
 	try:
-		if not db.query("Scripts", appName, ("Script", "Pre")):
+		if not db.query("Scripts", appName, ("Script", "IsPre")):
 			return (False, [])
 		preVal = (1 if pre == True else 0)
 		l = db.retrieve()
@@ -509,7 +507,7 @@ def revert_app(db, appName, oldCount, path, exeType):
 # Return: True if successful, false otherwise
 def del_entire_app(db, appName):
 	tables = [("OldFiles", "ApplicationID"), ("Files", "ApplicationID"), ("Dependencies", "ApplicationID"), \
-						("Scripts", "ApplicationID"), ("RegExprExe", "ApplicationID"),("RegExprVersion", "ApplicationID"), ("Application", "ApplicationName")]
+						("Scripts", "ApplicationID"), ("RegExpr", "ApplicationID"), ("Application", "ApplicationName")]
 	try:
 		db.change_commit(False)
 		for tab in tables:
@@ -531,14 +529,14 @@ def del_entire_app(db, appName):
 # Return: List of bools, first indicates successful db operation, all others
 #           represent if item was deleted successfully
 def del_app_exe_regex(db, appName, regex = []):
-	fields = ['ApplicationID', 'Expression']
+	fields = ['ApplicationID', 'Expression', 'IsVersion']
 	deletions = []
 	try:
 		if regex != []:
 			for re in regex:
-				deletions.append(db.delete('RegExprExe', fields, (appName, re)))
+				deletions.append(db.delete('RegExpr', fields, (appName, re, 0)))
 		else:
-			deletions.append(db.delete('RegExprExe', [fields[0]], (appName,)))
+			deletions.append(db.delete('RegExpr', [fields[0], fields[2]], (appName, 0)))
 		deletions.insert(0, True)
 		return deletions
 	except:
@@ -554,14 +552,14 @@ def del_app_exe_regex(db, appName, regex = []):
 # Return: List of bools, first indicates successful db operation, all others
 #           represent if item was deleted successfully
 def del_app_version_regex(db, appName, regex = []):
-	fields = ['ApplicationID', 'Expression']
+	fields = ['ApplicationID', 'Expression', 'IsVersion']
 	deletions = []
 	try:
 		if regex != []:
 			for re in regex:
-				deletions.append(db.delete('RegExprVersion', fields, (appName, re)))
+				deletions.append(db.delete('RegExpr', fields, (appName, re, 1)))
 		else:
-			deletions.append(db.delete('RegExprVersion', [fields[0]], (appName,)))
+			deletions.append(db.delete('RegExpr', [fields[0], fields[2]], (appName, 1)))
 		deletions.insert(0, True)
 		return deletions
 	except:
