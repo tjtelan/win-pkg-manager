@@ -94,20 +94,26 @@ def add_version_regex(db, appName, regex):
 # Parameters: db is a database class object
 #							appName is a string
 #							scriptName is a list of strings
+#							pre is True if scripts are pre-install, false if post-install
 # Return: List of bools, first indicates successful db operation, all others
 #           represent if item was able to be inserted (unique)
-def add_scripts(db, appName, scriptNames):
-	fields = ['ApplicationID', 'Script']
+def add_scripts(db, appName, scriptNames, pre = True):
+	fields = ['ApplicationID', 'Script', 'Pre']
 	insertions = []
-	cont, currAppScripts = get_app_scripts(db, appName)
+	cont, currAppScripts = get_app_scripts(db, appName, True)
 	if (not cont):
 		return [False]
+	cont, moreAppScripts = get_app_scripts(db, appName, False)
+	if (not cont):
+		return [False]
+	currAppScripts.extend(moreAppScripts)
+	preVal = (1 if pre == True else 0)
 	try:
 		for script in scriptNames:
 			if script in currAppScripts:
 				insertions.append(False)
 			else:
-				insertions.append(db.insert('Scripts', fields, (appName, script)))
+				insertions.append(db.insert('Scripts', fields, (appName, script, preVal)))
 				currAppScripts.append(script)
 		insertions.insert(0, True)
 		return insertions
@@ -340,14 +346,17 @@ def get_app_dependencies(db, appName):
 # get_app_scripts
 # Parameters: db is a database class object
 #							appName is a string
+#							pre is True if scripts are pre-install, false if post-install
 # Return: Tuple of the form (Bool, List)
 #					bool is true if successful, false otherwise
-def get_app_scripts(db, appName):
+def get_app_scripts(db, appName, pre = True):
 	try:
-		if not db.query("Scripts", appName, ("Script",)):
+		if not db.query("Scripts", appName, ("Script", "Pre")):
 			return (False, [])
+		preVal = (1 if pre == True else 0)
 		l = db.retrieve()
-		return (True, list(itertools.chain.from_iterable(l)))
+		l = [item[0] for item in l if item[1] == preVal]
+		return (True, l)
 	except:
 		print("An error occurred when retrieving application scripts from the database.")
 		return (False, [])
