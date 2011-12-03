@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 ########################################################################
 # Group: Windows Package Manager A
 # Name: Sebastian Imlay
@@ -17,104 +15,225 @@ class app:
     # Initialize the application using the database object.
     def __init__(self, appName, dbObject, logFileName):
 
-        #self.logger = logging.getLogger('Application')
-        #self.logger.setLevel(logging.DEBUG)
+        self.logger = logging.getLogger('Application')
+        self.logger.setLevel(logging.DEBUG)
 
         #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%a, %d %b %Y %H:%M:%S', filename=logFileName, filemode='a')
         self.name = appName
         self.db = dbObject
-        self.dlUrl = ''
+        self.href = ''
+        self.version = ''
 
-        #logging.info("Application: Initialized application using database for " + appName + ".")
+#logging.info("Application: Initialized application using database for " + appName + ".")
 
     # abritrary delete function.
     def __del__(self):
-        #logging.info("Application: Done using Application " + self.name + ".")
+#logging.info("Application: Done using Application " + self.name + ".")
         pass
+
 
     # Queries the database for regex(s) and download site(s) then downloads
     # the webpage and checks the regex against it.
     #
-    # Incomplete function.
+    # Returns Boolean True means there is an newer version,
+    #  false means no newer version found.
     def checkUpdates(self):
-        #logging.info("Checking for updates for " + self.name + ".")
+#logging.info("Checking for updates for " + self.name + ".")
 
-        validURLQuery, urlList = get_app_urls(self.db, self.name)
+        newVersion = ''
+        if self.href == '':
+            allHREFS = self.getExeURLs()
 
-        webHtml = ''
+            if len(allHREFS) > 1:
+                self.href = self.chooseHREF(allHREFS)
+            elif allHREFS != []:
+                self.href = allHREFS[0]
+            else:
+                print 'Found no hyperlinks in webpage.'
 
-        # make sure it's a list.
-        if validURLQuery and len(urlList) > 1:
-
-            dlURL = urlList[0]
 
 
-            f = urllib2.urlopen(str(dlURL))
-            webHtml = f.read()
-            f.close()
+            newVersion = self.getVersionFromURL(self.href)
 
-        validRegxQuery, regexList = get_app_exe_regex(self.db, self.name)
-        #self.dl_regex = regexList[0]
-        #allReturns = re.findall(self.dl_regex, webHtml, re.IGNORECASE)
+        validQuery, versionsInDB =  get_app_version(self.db, self.name)
+        if validQuery:
+            for currVersion in versionsInDB:
 
-        # Pull the version number out of the executable or out of the
-        # webpage.
+                # Found this version in the db.
+                if str(currVersion) == newVersion:
+                    return False
+        # Did not find this version in the db.
+        return True
 
 
     # Download the updates - check for updates first.
-    # Not complete (obviously)
     def dlUpdates(self):
+        if self.checkUpdates() or True:
+            logging.info( "Application: Updating " + self.name)
 
-        validURLQuery, urlList = get_app_urls(self.db, self.name)
-        webHtml = ''
+            if self.href == '':
+                allHREFS = self.getExeURLs()
+                href = ''
+                if allHREFS == []:
+                    logging.info( 'Application: Found no hyper links using that regular expression.')
 
-        if validURLQuery:
+                # More than one hyperlink.  Prompt user.
+                elif(len(allHREFS) > 1):
+                    href = self.chooseHREF(allHREFS)
 
-            dlURL = urlList[0]
-            #logging.info("Application: Dowloading webpage from: " + dlURL + ".")
+                # Only one hyperlink in html.
+                elif(len(allHREFS) == 1):
+                    href = allHREFS[0].replace('"', '')
 
-            f = urllib2.urlopen(dlURL)
-            webHtml = f.read()
-            f.close()
+                self.href = href.replace('"', '')
 
-        validRegxQuery, regexList = get_app_exe_regex(self.db, self.name)
-
-
-        allReturns = []
-        if validRegxQuery:
-            dl_regex = regexList[0]
-            allReturns = re.findall(dl_regex, webHtml, re.IGNORECASE)
+            if(self.href != ''):
+                # assume that there is no quotes are found in hyperlink.
+                if self.version == '':
+                    self.version = self.getVersionFromURL(self.href)
 
 
-        validVersionQuery, versionList = get_app_version(self.db, self.name)
+                #if self.version == '':
+                #    self.downloadFileName = self.name + self.version + '.exe'
+                #else:
+                #    self.downloadFileName = self.name + '.exe'
 
-        if(len(allReturns) > 0):
+                self.downloadFileName = self.name + self.version + '.exe'
+                print "Application: Dowloading executable from: %s to %s" % (self.href, self.downloadFileName)
+                add_update_file(self.db, self.name, self.version, self.downloadFileName)
+                self.href = self.href.replace('"', '')
+                try:
+                    req = urllib2.urlopen(self.href)
+                    output = open(self.downloadFileName, 'wb')
+                    output.write(req.read())
+                    output.close()
+                except:
+                    print 'Download href failed'
 
-            print("possible executable URL:", allReturns)
-            dl_url = allReturns[0]
-            dl_url = dl_url.replace('"', '')
-            #dl_url = dl_url[6:len(dl_url) - 1]
-            print("Dowloading executable from:", dl_url)
 
+    # Choose a hyperlink.
+    def chooseHREF(self, allHREFS):
+        print "Found more than one href.  All hrefs are:"
+        count = 0
+
+        for href in allHREFS:
+            print str(count) + ': ', href
+            count = count + 1
+
+        href = ''
+        hrefNum = raw_input('Choose href (number): ')
+        if int(hrefNum) > 0 and int(hrefNum) < len(allHREFS):
+            href = allHREFS[int(hrefNum)]
+
+        href = href.replace('"', '')
+
+        return href
+
+
+    def getVersionFromURL(self, href):
+        validVersionRegexQuery, versionRegexList = get_app_version_regex(self.db, self.name)
+
+        # apply version regex to the (possibly chosen) url.
+        if validVersionRegexQuery and versionRegexList != []:
+            versions = []
             version = ''
-            if validVersionQuery:
-                version = '.' + versionList[0]
+
+            # Get the version from the regex list.
+            for regex in versionRegexList:
+                versions = versions + re.findall(regex, href, re.IGNORECASE)
+
+            versions = sorted(set(versions)) # Remove Duplicates!
+
+            # Found with more than one. Prompt the user.
+            if (len(versions) > 1):
+                print 'Found more than one version in with the version regular exprossion.'
+                count = 0
+                for version in versions:
+                    print str(count) + ': ' + version
+                    count = count + 1
+
+                # Prompt.
+                versionNum = raw_input('Please choose a number: ')
+                if int(versionNum) > 0 and int(versionNum) < len(versions):
+                    version = '.' + versions[int(versionNum)]
+                    logging.info( 'Application: Version regex found no version information in Hypelink.')
+
+            # trivial case.
+            elif(len(versions) == 1):
+                version = versions[0]
+
+            if(version != ''):
+                logging.info( 'Application: Found version in hyperlink: ' + version)
+
+            # Found nothing.
+            else:
+                logging.info( 'Application: Version regex found no version information in Hypelink.')
+
+            self.version = version
+            return version
+
+        print 'found no version in hyperlink.'
+        return ''
 
 
-            req = urllib2.urlopen(dl_url)
-            output = open(self.name + version + '.exe', 'wb')
-            output.write(req.read())
-            output.close()
+    def getExeURLs(self):
+        allReturns = []
+        #logging.info( 'urllist = ', urlList
 
 
+        # Get the list of urls from the database.
+        validURLQuery, urlList = get_app_urls(self.db, self.name)
+        if validURLQuery and urlList != []:
+            webHtml = ''
+
+            # assume that the download url is  first in list.
+            dlURL = urlList[1]
+
+            logging.info( 'Application: Downloading webpage from ' + dlURL)
+            if(str(dlURL[0]) != '.'):
+                try:
+                    f = urllib2.urlopen(str(dlURL))
+                    webHtml = f.read()
+                    f.close()
+                except:
+                    print 'Error downloading hyperlink.'
+            else:
+                print 'Invalid download url:' + dlURL
 
 
-    # initialize without use of the database.
-    #def __init__(self, name, downLoadSite, dl_regex):
-    #    # Parameters: Database object
-    #    # log file (in append mode)
-    ##def __init__(self, downLoadSite, dl_regex):
-    #    self.dlSite = downLoadSite
-    #    self.dl_regex = dl_regex
-    #    self.name = name
-    #    self.dl_url = ''
+            validRegxQuery, regexList = get_app_exe_regex(self.db, self.name)
+
+            if validRegxQuery and len(regexList) > 0:
+                for app_regex in regexList:
+                    allReturns = allReturns + re.findall(app_regex, webHtml, re.IGNORECASE)
+
+                allReturns = sorted(set(allReturns)) # remove duplicates from list.s
+
+                if allReturns == []:
+                    otherDlUrl = urlList[0]
+                    logging.info( 'Application: No returns, possibly download url is swapped with website url. Checking website URL: ' + otherDlUrl)
+
+
+                    # Try the other urls.
+                    webHtml = ''
+                    try:
+                        f = urllib2.urlopen(otherDlUrl)
+                        webHtml = f.read()
+                        f.close()
+                    except:
+                        print 'Error downloading webpage.'
+
+                    # Apply regex again.
+                    others = []
+                    for app_regex in regexList:
+                        others = others + re.findall(app_regex, webHtml, re.IGNORECASE)
+
+                    others = sorted(set(others)) # remove duplicates from list.
+
+                    if(others != []):
+                        useOthers = raw_input('Other returns = %s. Use other returns? [y/n]:  ' % others)
+                        if useOthers == 'y':
+                            allReturns = others
+                    else:
+                        logging.info('Application: found nothing in website url.')
+        return allReturns

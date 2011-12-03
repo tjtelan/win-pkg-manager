@@ -10,8 +10,9 @@ from datetime import timedelta
 
 class shell:
     # __init__
-    #
+    # Parameters: logFileName is string
     # Initializes the command line interface for Windows Package Manager
+    # logFileName is a relative path to the log file 
     def __init__(self, logFileName):
 
         self.parser = argparse.ArgumentParser(description="FreeBSD ports inspired package manager for Windows", prefix_chars="-")
@@ -41,7 +42,7 @@ class shell:
         self.parser.add_argument("pkg_name", nargs="*", action=processCmd, help="Package(s) to act on")
 
     # cmd
-    #
+    # Parameters: argv is string
     # Takes in sys.argv, trims off sys.argv[0] and run command
     # TODO: This needs to be fixed to print help if programs aren"t supplied
     def cmd(self, argv=""):
@@ -50,11 +51,11 @@ class shell:
             return -1
         else:
             self.args = self.parser.parse_args(argv[1:])
-            #print("argv: %s" % argv[1:])
-            #print("all_switch: =", self.args.all)
             return 0
 
+# processCmd
 # Custom action to interpret argument flags, direct execution database queries and application calls
+# Parameters: argpase.Action is the action method of the argparse for class
 # TODO: overload print function to check for flag.verbose
 class processCmd(argparse.Action):
 
@@ -93,30 +94,30 @@ class processCmd(argparse.Action):
             # Check on the status of dependencies of `pkg"
             if flag.recursive:
                 test_depends = ["dep1", "dep2", "dep3"]
-                print("Query for dependencies of %s" % pkg)
+                print("DEMO: Query for dependencies of %s" % pkg)
 
                 # TODO: Use data from db queries
                 # append to execution list
                 for deps in test_depends:
-                    print("Adding %s as a dependency to %s" % (deps, pkg))
+                    print("DEMO: Adding %s as a dependency to %s" % (deps, pkg))
                     pkg_order.insert(pkg_order.index(pkg)+1, deps)
 
             # Check on the status of programs that depend on `pkg"
             if flag.upward_recursive:
                 test_updepends = ["Udep1", "Udep2", "Udep3"]
-                print("Query for programs which have %s as a dependency" % pkg)
+                print("DEMO: Query for programs which have %s as a dependency" % pkg)
 
                 # TODO: Use data from db queries
                 # append to execution list
                 for deps in test_updepends:
-                    print("Adding %s as a dependency to %s" % (deps, pkg))
+                    print("DEMO: Adding %s as a dependency to %s" % (deps, pkg))
                     pkg_order.insert(pkg_order.index(pkg)+1, deps)
 
         #if flag.verbose:
-        #print("Order of execution: %s\n" % pkg_order)
+        #print("Order of execution: %s\n" % pkg_order[::-1])
 
 
-        # If no packages defined in execution:
+        # If no packages implemented in execution:
             # `info` should spit out detail on all installed packages
             # `update` should attempt to update all installed packages
 
@@ -130,27 +131,24 @@ class processCmd(argparse.Action):
             else:
                 self.cmdUpdate(None, flag)
         else:
-            for pkg in reversed(pkg_order):
+            # Pass in pkg_order in reverse to preseve execution order
+            if (flag.command == "info"):
+                self.cmdInfo(pkg_order[::-1], flag)
+            elif (flag.command == "update"):
+                self.cmdUpdate(pkg_order[::1], flag)
+            elif (flag.command == "install"):
+                self.cmdInstall(pkg_order[::1], flag)
+            elif (flag.command == "remove"):
+                self.cmdRemove(pkg_order[::1], flag)
+            else:
+                print("Problem. Shouldn\'t ever make it here\n")
 
-                #if flag.verbose:
-#                print("Performing %s on %s" % (flag.command, pkg))
-#                print("Query for %s in db" % pkg)
-#
-#                print("DB: Query for version info for %s" % pkg)
-#                print("DB: Check if %s has been checked for \'out-of-date-ness\' recently" % pkg)
-#                print("APP: Check for current version if needed\n")
 
-                if (flag.command == "info"):
-                    self.cmdInfo(pkg, flag)
-                elif (flag.command == "update"):
-                    self.cmdUpdate(pkg, flag)
-                elif (flag.command == "install"):
-                    self.cmdInstall(pkg, flag)
-                elif (flag.command == "remove"):
-                    self.cmdRemove(pkg, flag)
-                else:
-                    print("Problem. Shouldn\'t ever make it here\n")
-
+    # cmdInfo
+    # Parameters: pkg and flag are lists
+    # Takes a list of packages and returns version number and up-to-date status
+    # Will attempt to download updates if available and flag.no_execute not set
+    # TODO: Move download functionality into `update` 
     def cmdInfo(self, pkg, flag):
 
         if pkg == None:
@@ -159,11 +157,13 @@ class processCmd(argparse.Action):
 
         else:
             # Query db for requested package
-            prog_list = (True, [ pkg ])
+            prog_list = (True,  pkg )
+            #print(prog_list[1])
 
-
-        print("\nName" + " Version" + " Out-of-date?\n")
-        print("----" + " -------" + " ------------\n")
+        # Print header to the package table
+        print("")
+        print("{0:15s} {1:10s} {2:10s}").format("Name", "Version", "Up-to-date?")
+        print("{0:15s} {1:10s} {2:10s}").format("----", "-------", "-----------")
         for p in prog_list[1]:
             result = db_wrapper.get_app_version(mydb, p)
 
@@ -175,11 +175,11 @@ class processCmd(argparse.Action):
                     pkg_version = result[1][0]
                 else:
                     pkg_version = "N/A"
-                    pkg_current = "N/A"
+                    pkg_current = "Not found"
 
             else:
-                print(pkg + " not found\n")
-                return False
+                print("{0:15s} {1:10s} {2:10s}").format(p, "N/A", "Not found")
+                continue
 
 
             # Check if new version has been checked "recently"
@@ -194,14 +194,15 @@ class processCmd(argparse.Action):
                     # Check if out of date
                         # download new version if available
                         # set out-of-date
-                    # print("More than a day!")
-
 
                     # Download updates if they are available and !(flag.no_execute)
                     if not flag.no_execute:
-                        pass
-                        # wpm_app.checkUpdates
-                        #prog = app(pkg, mydb, appLogFileName)
+                        prog = app(p, mydb, appLogFileName)
+                        if prog.checkUpdates():
+                            pkg_current = "Y"
+                        else:
+                            pkg_current = "N"
+                        #print(prog.getExeURLs())
                         #prog.dlUpdates()
 
 
@@ -212,66 +213,172 @@ class processCmd(argparse.Action):
                 # if out of date and !(flag.no_execute):
                     #prog.dlUpdates()
 
-            print(p + " " + pkg_version + " " + pkg_current)
+            # Display installed packages, version and up to date status
+            print("{0:15s} {1:10s} {2:10s}").format(p, pkg_version, pkg_current)
 
+        print("")
+
+    # cmdUpdate
+    # Parameters: pkg and flag are lists
+    # Takes in a list of packages and downloads new packages and updates the old packages
+    # Updates the version references in the database 
     def cmdUpdate(self, pkg, flag):
-        pass
-#        print("APP: Go out and download installer")
-#        print("APP: Run through update script (This will need fitting to each program)")
-#        print("DB: Update version information for %s when complete\n" % pkg)
-#        print("(APP: Probably need to have functionality to update all installed programs when shell run with no program)")
 
+
+
+        if pkg == None:
+            # Query for all installed packages
+            prog_list = db_wrapper.get_applications(mydb)
+
+        else:
+            # Query db for requested package
+            prog_list = (True,  pkg )
+            #print(prog_list[1])
+
+        print("Checking for updates")
+        for p in prog_list[1]:
+            print(p + ":")
+            result = db_wrapper.get_app_version(mydb, p)
+
+
+            if flag.keep_going or (result[0] == True and result[1] != []) :
+
+                if result[1] != []:
+                    pkg_version = result[1][0]
+                else:
+                    pkg_version = "N/A"
+                    pkg_current = "Not found"
+
+            else:
+                print("{0:15s} {1:10s} {2:10s}").format(p, "N/A", "Not found")
+                continue
+
+
+            # Check if new version has been checked "recently"
+            # TODO: Define check frequency in settings.py
+            if result[1] != []:
+                last_checked = date.fromtimestamp(float(result[1][1]))
+                today = date.fromtimestamp(time.time())
+
+                # Check for new versions only once a day
+#                if flag.force or (today - last_checked ) > timedelta(days=1):
+#                    pass
+                    # Check if out of date
+                        # download new version if available
+                        # set out-of-date
+
+                    # Download updates if they are available and !(flag.no_execute)
+                if not flag.no_execute:
+                    prog = app(p, mydb, appLogFileName)
+                    if prog.checkUpdates():
+                        prog.dlUpdates()
+
+
+#               else:
+                    # If version has been checked already...
+#                    pkg_current = "N"
+
+                # if out of date and !(flag.no_execute):
+                    #prog.dlUpdates()
+
+            # Display installed packages, version and up to date status
+#            print("{0:15s} {1:10s} {2:10s}").format(p, pkg_version, pkg_current)
+
+#        print("")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#        if pkg == None:
+#            # Query for all installed packages
+#            prog_list = db_wrapper.get_applications(mydb)
+#
+#        else:
+#            # Query db for requested package
+#            prog_list = (True,  pkg )
+#            #print(prog_list[1])
+#        for p in prog_list[1]:
+#                last_checked = date.fromtimestamp(float(result[1][1]))
+#                today = date.fromtimestamp(time.time())
+#
+#
+#            # Check for new versions only once a day
+#            if flag.force or (today - last_checked ) > timedelta(days=1):
+#                pass
+#                # Check if out of date
+#                    # download new version if available
+#                    # set out-of-date
+#
+#                # Download updates if they are available and !(flag.no_execute)
+#                if not flag.no_execute:
+#                    prog = app(p, mydb, appLogFileName)
+#                    if prog.checkUpdates():
+#                        prog.dlUpdates()
+
+            # if out of date and !(flag.no_execute):
+                #prog.dlUpdates()
+
+    # cmdInstall
+    # Parameters: pkg and flag are lists
+    # Takes in a list of packages, downloads and installs them, then registers them with the database
     def cmdInstall(self, pkg, flag):
         pass
-#        print("(Install is assumed to be interactive in most cases, but could add functionality later to be batched)")
-#        print("SHELL: Ask for details for the installer (Programs will have to be fitted to this package manager)")
-#        print("DB: Create a new profile using those defaults")
-#        print("APP: Fetch and install using info from the DB\n")
 
+    # cmdRemove
+    # Parameters: pkg and flag are lists
+    # Takes in a list of packages, and uninstalls them and unregisters them with the database
     def cmdRemove(self, pkg, flag):
         pass
-#        print("DB: Check for an uninstaller")
-#        print("APP: Run uninstaller if DB says there is one")
-#        print("APP: Run uninstall script, if you had to create one with the installer")
-#        print("APP: Respond with error if %s cannot be uninstalled with this tool" % pkg)
-#        print("DB: Remove profile from DB if successfullly removed\n")
-
 
     # For demo purposes
     def notImplemented(self, flag):
 
+
         ## Options
         if flag.after_install:
-            print("-A functionality has not yet been defined\n")
+            print("-A functionality has not yet been implemented")
 
         if flag.before_install:
-            print("-B functionality has not yet been defined\n")
+            print("-B functionality has not yet been implemented")
 
         if flag.emit_summaries:
-            print("-e functionality has not yet been defined\n")
+            print("-e functionality has not yet been implemented")
 
         if flag.fetch_only:
-            print("-F functionality has not yet been defined\n")
+            print("-F functionality has not yet been implemented")
 
         if flag.log_file != os.curdir:
-            print("-l functionality has not yet been defined\n")
+            print("-l functionality has not yet been implemented")
 
         if flag.omit_check:
-            print("-O functionality has not yet been defined\n")
+            print("-O functionality has not yet been implemented")
 
         if flag.verbose:
-            print("-v functionality has not yet been defined\n")
+            print("-v functionality has not yet been implemented")
 
         if flag.exclude:
-            print("-x functionality has not yet been defined\n")
+            print("-x functionality has not yet been implemented")
 
         ## Commands
-        if flag.command == "update":
-            print("\"Update\" functionality has not yet been defined")
+#        if flag.command == "update":
+#            print("\"Update\" functionality has not yet been implemented")
 
         if flag.command == "install":
-            print("\"Install\" functionality has not yet been defined")
+            print("\"Install\" functionality has not yet been implemented")
 
         if flag.command == "remove":
-            print("\"Remove\" functionality has not yet been defined")
+            print("\"Remove\" functionality has not yet been implemented")
 
