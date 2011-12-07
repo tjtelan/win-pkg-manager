@@ -8,7 +8,7 @@
 
 # re for regex, urllib2 for downloading.
 from db_wrapper import *
-import re, urllib2, logging
+import re, urllib2, logging, os
 
 class app:
 
@@ -104,6 +104,17 @@ class app:
                 self.href = self.href.replace('"', '')
                 try:
                     req = urllib2.urlopen(self.href)
+
+
+                    # chdir to download directory.
+                    downloadDir = 'downloads'
+                    if os.path.exists(downloadDir):  # exists.
+                        os.chdir(downloadDir)
+                    else:  #create it.
+                        print 'createding download directory for:', self.name
+                        os.mkdir(downloadDir)
+                        os.chdir(downloadDir)
+
                     output = open(self.downloadFileName, 'wb')
                     output.write(req.read())
                     output.close()
