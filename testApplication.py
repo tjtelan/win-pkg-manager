@@ -25,8 +25,6 @@ if validQuery and not vim_name in applications:
     db_wrapper.add_version_regex(mydb, vim_name, [vim_version_regex])
 
 vim = app(vim_name, mydb, appLogFileName)
-#print 'gvim urls:', vim.getExeURLs()
-
 updatesAvail = vim.checkUpdates()
 print 'gvim update available?', updatesAvail
 
@@ -48,7 +46,6 @@ if validQuery and putty_name not in applications:
 
 putty = app(putty_name, mydb, appLogFileName)
 
-#print 'putty urls:', putty.getExeURLs()
 updatesAvail = putty.checkUpdates()
 print 'putty updates available? ', updatesAvail
 if updatesAvail:
@@ -73,6 +70,7 @@ if updatesAvail:
     winscp.dlUpdates()
 
 
+# Stuff for 7zip.
 SevenZip_name = '7zip'
 SevenZip_url = 'http://www.7-zip.org/download.html'
 SevenZip_version = '1.0'
@@ -90,11 +88,3 @@ updatesAvail = SevenZip.checkUpdates()
 print '7zip update available? ', updatesAvail
 if updatesAvail:
     SevenZip.dlUpdates()
-
-
-
-#
-#vBox = Application("virtual box", "https://www.virtualbox.org/wiki/Downloads", 'href=".*Win.*\.exe"')
-#
-#vBox.checkUpdates()
-#vBox.dlUpdates()
