@@ -22,7 +22,7 @@ Installation:
 
 Python 2.7 must be installed and include the following packages: sqlite, time, logging, ...
 
-A sqlite database is not required to be setup before starting the application. If one is not setup, the name of the database should be configured. Upon startup of the program, the database will be created and include all necessary tables; if the tables already exist then this will be detected. 
+A sqlite database is not required to be setup before starting the application. If one is not setup, the name of the database should be configured. Upon startup of the program, the database will be created and include all necessary tables; if the tables already exist then this will be detected.
 
 Git must be installed, as that is how the package tree is kept up to date.
 
@@ -46,12 +46,14 @@ Programmer's Guide:
 
 wpm_db.py -> This file contains the database object and member functions that perform typical operations on a database (i.e. insert, update, etc). The member functions are primarily designed for the builtin database schema but generatlized to the point where the addition of tables may not require modification to the existing functions (this case is not guaranteed). Some of the functions perform specialized operations given a specific table, i.e. when the function update is given the table OldFiles a text insertion is performed to allow for incrementing a counter.
 
-db_wrapper.py -> This file acts as a wedge between the database operations (i.e. queries) and the programmer. The functions it provides are specific to the application's intended use which is package management. 
+db_wrapper.py -> This file acts as a wedge between the database operations (i.e. queries) and the programmer. The functions it provides are specific to the application's intended use which is package management.
 
+
+wpm_app.py -> This file contains the application object and member functions that perform functions of a regular package such as checkUpdates and dlUpdates.  These functions are designed to use download/version regular expressions, and URLs in the database using the db_wrapper helper functions.  To find the hyperlink for a given application, a regular expression (found in the database) is compared against the entire webpage.  If there is more than one hyperlink found in the html, the user is prompted asking the user which he or she would like to use.  This is the URL of choice for downloading.  This is done very similary for the version number of the installer.
 
 -------------------------------------------------------------------------------
 Western Washington University
 Computer Science Department - 2011
-Sebastian J. Imlay
+Sebastian Imlay
 Joshua Stein
 T.J. Telan
